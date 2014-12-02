@@ -15,7 +15,17 @@
 ;============================================================
 
 !cpu 6502
-!to "build/empty.prg",cbm    ; output file
+!to "build/cocos2d.prg",cbm    ; output file
+
+;============================================================
+; resourcefiles like character sets, music or sprite shapes
+; are usually explicitly loaded to a specific location in
+; memory. The addresses and loading is handled here
+;============================================================
+
+!source "code/config_resources.asm"
+!source "code/config_symbols.asm"
+
 
 ;============================================================
 ; BASIC loader with start address $c000
@@ -26,13 +36,8 @@
 !byte $31,$35,$32,$00,$00,$00           ; puts BASIC line 2012 SYS 49152
 * = $c000     				            ; start address for 6502 code
 
-;============================================================
-;  Main routine with IRQ setup and custom IRQ routine
-;============================================================
-
 !source "code/main.asm"
+!source "code/sprites.asm"
+!source "code/sub_clear_screen.asm"
 
-;============================================================
-;  add additional source files as required
-;============================================================
 
