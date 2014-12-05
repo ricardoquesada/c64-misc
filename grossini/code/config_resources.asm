@@ -5,7 +5,7 @@ address_chars = $3800     ; loading address for charset ($3800: last possible lo
 address_sid = $1001 	  ; loading address for sid tune
 
 * = address_sprites                  
-!bin "resources/sprites.spr",512,3  	 ; skip first three bytes which is encoded Color Information
+!bin "resources/sprites.spr",512,0  	 ; skip first three bytes which is encoded Color Information
 										 ; then load 16x64 Bytes from file
 ; * = address_sid                         
 ; !bin "resources/empty_1000.sid",, $7c+2  ; remove header from sid and cut off original loading address 
