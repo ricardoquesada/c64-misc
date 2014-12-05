@@ -38,12 +38,19 @@ main
 
         ; jsr $e544  ; clear the screen
 
+
+        ; turn off cia interrups
         lda #$7f
         sta $dc0d
         sta $dd0d
         
-        lda #$01    ; Set Interrupt Request Mask...
-        sta $d01a   ; ...we want IRQ by Rasterbeam (%00000001)
+        lda $d01a       ; enable raster irq
+        ora #$01
+        sta $d01a
+
+        lda $d011       ; clear high bit of raster line
+        and #$7f
+        sta $d011
 
         ; set text mode
         lda #$1b
@@ -92,7 +99,9 @@ main
 ;            cli
 ;            jmp loop
 
-        jmp *       ; infinite loop
+
+        ; jmp *       ; infinite loop
+        rts
 
 
 
@@ -123,13 +132,22 @@ irq2
         sta $d020
         sta $d021
 
-        lda #<irq1   ; point IRQ Vector to our custom irq routine
+        lda #<irq1      ; point IRQ Vector to our custom irq routine
         ldx #>irq1 
-        sta $0314    ; store in $314/$315
+        sta $0314       ; store in $314/$315
         stx $0315   
-        lda #$20      ; trigger interrupt at row zero
+        lda #$20        ; trigger interrupt at row zero
         sta $d012
 
-        asl $d019      ; acknowledge IRQ / clear register for next interrupt
-        jmp $ea31      ; return to Kernel routine
+        asl $d019       ; acknowledge IRQ / clear register for next interrupt
+
+        ; jmp $ea31      ; return to Kernel routine
+
+        pla             ; we exit interrupt entirely.
+        tay             ; since happening 120 times per
+        pla             ; second, only 60 need to go to
+        tax             ; hardware Rom. The other 60 simply
+        pla             ; end
+        rti
+
 

@@ -47,7 +47,7 @@ XPIXSHIFTADD
          STA TMP1
          LDA SCRLADR-1,Y
          PHA
-S
+-
          LDA TMP1
          STA SCRLADR-1,X
          PLA
@@ -56,7 +56,7 @@ S
          PHA
          DEY
          DEX
-         BNE S
+         BNE -
          PLA
 GETNEWCHAR
 ;TEXTADR  = *+1
