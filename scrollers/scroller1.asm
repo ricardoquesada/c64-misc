@@ -89,12 +89,10 @@ DIRCHANGE LDA XPIXSHIFTADD
          STY DESTSTART
          BNE LOOP
 ;---------------------------------------
-TEXT     !scr " this scroller can scroll in forward and backward direction!"
-         !scr "               "
-         !scr "                    "
-         !scr "         "
+TEXT     
+         !scr " this scroller can scroll in forward and backward direction!"
+         !scr "                                            "
          !BYTE $FF
          !scr "won gnillorcs morf tfel ot thgir ... . "
-         !scr "                    "
-         !scr "                    "
+         !scr "                                        "
          !BYTE $FF,0
