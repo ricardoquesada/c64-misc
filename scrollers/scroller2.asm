@@ -3,7 +3,7 @@
 ;
 
 !cpu 6510
-!to "build/test.prg",cbm    ; output file
+!to "build/scroller2.prg",cbm    ; output file
 
 
 ;============================================================
@@ -20,132 +20,159 @@
 SCREEN = $0400 + 24 * 40
 SPEED = 1
 
-      jsr $e544 
+MUSIC_INIT = $1000
+MUSIC_PLAY = $1003
 
-+     sei
+         jsr $e544 
 
-      ; turn off cia interrups
-      lda #$7f
-      sta $dc0d
-      sta $dd0d
++        sei
 
-      lda $d01a       ; enable raster irq
-      ora #$01
-      sta $d01a
+         ; turn off cia interrups
+         lda #$7f
+         sta $dc0d
+         sta $dd0d
 
-      lda $d011       ; clear high bit of raster line
-      and #$7f
-      sta $d011
+         lda $d01a       ; enable raster irq
+         ora #$01
+         sta $d01a
 
-      ; irq handler
-      lda #<irq1
-      sta $0314
-      lda #>irq1
-      sta $0315
+         lda $d011       ; clear high bit of raster line
+         and #$7f
+         sta $d011
 
-      ; 38 columns
-      lda $d016
-      and #%11110111
-      sta $d016
+         ; irq handler
+         lda #<irq1
+         sta $0314
+         lda #>irq1
+         sta $0315
 
-      ; raster interrupt
-      lda #241
-      sta $d012
-      
-      ; clear interrupts and ACK irq
-      lda $dc0d
-      lda $dd0d
-      asl $d019
+         ; raster interrupt
+         lda #241
+         sta $d012
+         
+         ; clear interrupts and ACK irq
+         lda $dc0d
+         lda $dd0d
+         asl $d019
 
-      cli   
-      rts
+         lda #$00
+         tax
+         tay
+         jsr MUSIC_INIT      ; Init music
+
+         cli
+
+
+
+mainloop 
+         lda sync   ;init sync
+         and #$00
+         sta sync
+-        cmp sync
+         beq -
+
+         jsr scroll1
+         jsr MUSIC_PLAY
+         jmp mainloop
 
 irq1
-      inc $d019        
+         asl $d019        
 
-      lda #<irq2
-      sta $0314
-      lda #>irq2
-      sta $0315
+         lda #<irq2
+         sta $0314
+         lda #>irq2
+         sta $0315
 
-      lda #254
-      sta $d012
+         lda #249
+         sta $d012
 
-      lda #0
-      sta $d020
-      
-      dec speed
-      bne +
+         lda #0
+         sta $d020
 
-      ; restore speed
-      lda #SPEED
-      sta speed
+         lda scroll_x
+         sta $d016
 
-
-      ; scroll
-      dec scroll_x
-      lda scroll_x
-      and #07   
-      sta $d016
-      cmp #00
-      bne +
-
-      jsr move_chars
-
-+
-      jmp $ea31
-
-move_chars
-      ; move the chars to the left
-      ldx #0
--     lda SCREEN+1,x
-      sta SCREEN,x
-      inx
-      cpx #39
-      bne -
-
-      ; put next char in column 40
-      ldx lines_scrolled
-      lda label,x
-      cmp #$ff
-      beq +
-      sta SCREEN+39
-      inx
-      stx lines_scrolled
-      rts
-
-+     lda #0
-      sta lines_scrolled 
-      rts
+         jmp $ea81
 
 
 irq2
-      inc $d019        
+         asl $d019        
 
-      lda #<irq1
-      sta $0314
-      lda #>irq1
-      sta $0315
+         lda #<irq1
+         sta $0314
+         lda #>irq1
+         sta $0315
 
-      lda #241
-      sta $d012
+         lda #241
+         sta $d012
 
-      lda #1
-      sta $d020
+         lda #1
+         sta $d020
 
-      ; no scrolling
-      lda #%00001000
-      sta $d016
+         ; no scrolling, 40 cols
+         lda #%00001000
+         sta $d016
 
-      jmp $ea81
+         inc sync
+
+         ; inc $d020
+         ; jsr MUSIC_PLAY
+         ; dec $d020
+         jmp $ea31
+
+scroll1
+         dec speed
+         bne endscroll
+
+         ; restore speed         
++        lda #SPEED
+         sta speed
+
+         ; scroll
+         dec scroll_x
+         lda scroll_x
+         and #07   
+         sta scroll_x
+         cmp #07
+         bne endscroll
+
+         ; move the chars to the left
+         ldx #0
+-        lda SCREEN+1,x
+         sta SCREEN,x
+         inx
+         cpx #39
+         bne -
+
+         ; put next char in column 40
+         ldx lines_scrolled
+         lda label,x
+         cmp #$ff
+         beq +
+         sta SCREEN+39
+         inx
+         stx lines_scrolled
+         rts
+
++        lda #0
+         sta lines_scrolled 
+
+endscroll         
+         rts
 
 
 ; variables
+sync           !byte 1
 scroll_x       !byte 7
 speed          !byte SPEED
 lines_scrolled !byte 0    
 
-
            ;          1         2         3        
            ;0123456789012345678901234567890123456789
 label !scr "hello world world, will you scroll ? testing scrolling one line  ",$ff
+
+
+
+* = $1000
+         !bin  "music.sid",, $7c+2
+
