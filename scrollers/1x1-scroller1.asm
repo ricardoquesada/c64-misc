@@ -1,4 +1,7 @@
-
+;
+; code download from somewhere in the internet
+; I don't know its license
+;
 !cpu 6502
 !to "build/scroller1.prg",cbm    ; output file
 

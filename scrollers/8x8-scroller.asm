@@ -1,9 +1,9 @@
 ; 
-; scrolling 1 line
+; scrolling 1x1 test
 ;
 
 !cpu 6510
-!to "build/scroller2.prg",cbm    ; output file
+!to "build/8x8-scroller.prg",cbm    ; output file
 
 
 ;============================================================
