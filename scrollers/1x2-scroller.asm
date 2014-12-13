@@ -17,7 +17,7 @@
 
 * = $c000                               ; start address for 6502 code
 
-SCREEN = $0400 + 24 * 40
+SCREEN = $0400 + 23 * 40                ; start at line 23
 SPEED = 1
 
 MUSIC_INIT = $1000
@@ -52,7 +52,7 @@ MUSIC_PLAY = $1003
         sta $0315
 
         ; raster interrupt
-        lda #241
+        lda #233
         sta $d012
 
         ; clear interrupts and ACK irq
@@ -108,7 +108,7 @@ irq2
         lda #>irq1
         sta $0315
 
-        lda #241
+        lda #233
         sta $d012
 
         lda #1
@@ -143,8 +143,10 @@ scroll1
 
         ; move the chars to the left
         ldx #0
--       lda SCREEN+1,x
+-       lda SCREEN+1,x      ; scroll top part of 1x2 char
         sta SCREEN,x
+        lda SCREEN+40+1,x   ; scroll bottom part of 1x2 char
+        sta SCREEN+40,x
         inx
         cpx #39
         bne -
@@ -154,7 +156,9 @@ scroll1
         lda label,x
         cmp #$ff
         beq +
-        sta SCREEN+39
+        sta SCREEN+39       ; top part of the 1x2 char
+        ora #$40            ; bottom part is 64 chars ahead in the charset
+        sta SCREEN+40+39    ; bottom part of the 1x2 char
         inx
         stx lines_scrolled
         rts
@@ -174,7 +178,7 @@ lines_scrolled !byte 0
 
            ;          1         2         3
            ;0123456789012345678901234567890123456789
-label !scr "Hello World! abc DEF ghi JKL mno PQR stu VWX yz 01234567890 ().",$ff
+label !scr "hello world! abc def ghi jkl mno pqr stu vwx yz 01234567890 .()",$ff
 
 
 
@@ -182,6 +186,5 @@ label !scr "Hello World! abc DEF ghi JKL mno PQR stu VWX yz 01234567890 ().",$ff
          !bin  "music.sid",, $7c+2
 
 * = $3800
-         ; !bin "fonts/rambo_font.ctm",384,24   ; skip first 24 bytes which is CharPad format information
+         !bin "fonts/1x2-chars.raw"
 
-         !bin "fonts/1x1-inverted-chars.raw"
