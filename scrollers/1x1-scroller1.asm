@@ -3,7 +3,7 @@
 ; I don't know its license
 ;
 !cpu 6502
-!to "build/scroller1.prg",cbm    ; output file
+!to "build/scroller1x1-1.prg",cbm    ; output file
 
 * = $0801                               ; BASIC start address (#2049)
 !byte $0d,$08,$dc,$07,$9e,$20,$34,$39   ; BASIC loader to start at $c000...

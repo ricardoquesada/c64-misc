@@ -3,7 +3,7 @@
 ;
 
 !cpu 6510
-!to "build/scroller2.prg",cbm    ; output file
+!to "build/scroller1x2.prg",cbm    ; output file
 
 
 ;============================================================
@@ -88,7 +88,7 @@ irq1
         lda #>irq2
         sta $0315
 
-        lda #249
+        lda #250
         sta $d012
 
         lda #0
@@ -155,16 +155,18 @@ scroll1
         ldx lines_scrolled
         lda label,x
         cmp #$ff
-        beq +
-        sta SCREEN+39       ; top part of the 1x2 char
+        bne +
+
+        ; reached $ff ? Then start from the beginning
+        ldx #0
+        stx lines_scrolled
+        lda label
+        
++       sta SCREEN+39       ; top part of the 1x2 char
         ora #$40            ; bottom part is 64 chars ahead in the charset
         sta SCREEN+40+39    ; bottom part of the 1x2 char
         inx
         stx lines_scrolled
-        rts
-
-+       lda #0
-        sta lines_scrolled
 
 endscroll
         rts
@@ -186,5 +188,6 @@ label !scr "hello world! abc def ghi jkl mno pqr stu vwx yz 01234567890 .()",$ff
          !bin  "music.sid",, $7c+2
 
 * = $3800
-         !bin "fonts/1x2-chars.raw"
-
+         ; !bin "fonts/1x2-chars.raw"
+         ; !bin "fonts/devils_collection_25_y.64c",,2
+         !bin "fonts/devils_collection_26_y.64c",,2

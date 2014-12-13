@@ -3,7 +3,7 @@
 ;
 
 !cpu 6510
-!to "build/scroller2x2.prg",cbm    ; output file
+!to "build/scroller2x1.prg",cbm    ; output file
 
 
 ;============================================================
@@ -17,7 +17,7 @@
 
 * = $c000                               ; start address for 6502 code
 
-SCREEN = $0400 + 23 * 40                ; start at line 23
+SCREEN = $0400 + 24 * 40                ; start at line 24
 SPEED = 1
 
 MUSIC_INIT = $1000
@@ -52,7 +52,7 @@ MUSIC_PLAY = $1003
         sta $0315
 
         ; raster interrupt
-        lda #233
+        lda #241
         sta $d012
 
         ; clear interrupts and ACK irq
@@ -108,7 +108,7 @@ irq2
         lda #>irq1
         sta $0315
 
-        lda #233
+        lda #241
         sta $d012
 
         lda #1
@@ -145,8 +145,6 @@ scroll1
         ldx #0
 -       lda SCREEN+1,x      ; scroll top part of 1x2 char
         sta SCREEN,x
-        lda SCREEN+40+1,x   ; scroll bottom part of 1x2 char
-        sta SCREEN+40,x
         inx
         cpx #39
         bne -
@@ -162,6 +160,7 @@ scroll1
         sta lines_scrolled
         sta half_char
         lda label
+
 
 +       ora half_char         ; right part ? left part will be 0
 
@@ -192,14 +191,14 @@ half_char      !byte 0
 
            ;          1         2         3
            ;0123456789012345678901234567890123456789
-label !scr "hello world! abc def ghi jkl mnopqrstuvwxyz 01234567890 .()",$ff
+label !scr "hello world! abc def ghi jkl mno pqr stu vwx yz 01234567890 @!()/",$ff
 
 
 
 * = $1000
-         !bin  "music.sid",, $7c+2
+         !bin  "music.sid",,$7c+2
 
 * = $3800
-         !bin "fonts/2x2-inverted-chars.raw"
-         ; !bin "fonts/rambo_xy.64c",384,24
+         ; !bin "fonts/yie_are_kung_fu_x.64c",,2      ; skip the first 2 bytes (64c format)
+         !bin "fonts/devils_collection_21_x.64c",,2      ; skip the first 2 bytes (64c format)
 

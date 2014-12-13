@@ -3,7 +3,7 @@
 ;
 
 !cpu 6510
-!to "build/scroller2.prg",cbm    ; output file
+!to "build/scroller1x1-2.prg",cbm    ; output file
 
 
 ;============================================================
@@ -88,7 +88,7 @@ irq1
         lda #>irq2
         sta $0315
 
-        lda #249
+        lda #250
         sta $d012
 
         lda #0
@@ -153,14 +153,16 @@ scroll1
         ldx lines_scrolled
         lda label,x
         cmp #$ff
-        beq +
-        sta SCREEN+39
+        bne +
+
+        ; reached $ff ? Then start from the beginning
+        ldx #0
+        stx lines_scrolled
+        lda label
+
++       sta SCREEN+39
         inx
         stx lines_scrolled
-        rts
-
-+       lda #0
-        sta lines_scrolled
 
 endscroll
         rts
@@ -182,6 +184,7 @@ label !scr "Hello World! abc DEF ghi JKL mno PQR stu VWX yz 01234567890 ().",$ff
          !bin  "music.sid",, $7c+2
 
 * = $3800
-         ; !bin "fonts/rambo_font.ctm",384,24   ; skip first 24 bytes which is CharPad format information
-
+         ; !bin "fonts/rambo_font.ctm",,24   ; skip first 24 bytes which is CharPad format information
+         ; !bin "fonts/yie_are_kung_fu.64c",,2    ; skip the first 2 bytes (64c format)
          !bin "fonts/1x1-inverted-chars.raw"
+         ; !bin "fonts/devils_collection_01.64c",,2    ; skip the first 2 bytes (64c format)

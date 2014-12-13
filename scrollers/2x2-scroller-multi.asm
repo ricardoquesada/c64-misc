@@ -67,6 +67,22 @@ MUSIC_PLAY = $1003
 
         cli
 
+        ; set multi colors
+        lda #$01
+        sta $d021
+        lda #$02
+        sta $d022
+        lda #$0c
+        sta $d023
+
+        ; char color
+        ldx #0
+        lda #$0b
+-       sta $d800 + 23 * 40,x
+        inx
+        cpx #80
+        bne -
+
 
 
 mainloop
@@ -95,6 +111,7 @@ irq1
         sta $d020
 
         lda scroll_x
+        ora #%00010000  ; set MCM on
         sta $d016
 
         jmp $ea81
@@ -115,7 +132,7 @@ irq2
         sta $d020
 
         ; no scrolling, 40 cols
-        lda #%00001000
+        lda #%00011000
         sta $d016
 
         inc sync
@@ -192,14 +209,13 @@ half_char      !byte 0
 
            ;          1         2         3
            ;0123456789012345678901234567890123456789
-label !scr "hello world! abc def ghi jkl mnopqrstuvwxyz 01234567890 .()",$ff
+label !scr "hello world abc def ghi jkl mno pqr stu vwxyz 01234567890(). ",$ff
 
 
 
 * = $1000
-         !bin  "music.sid",, $7c+2
+         !bin  "music.sid",,$7c+2
 
 * = $3800
-         !bin "fonts/2x2-inverted-chars.raw"
-         ; !bin "fonts/rambo_xy.64c",384,24
+         !bin "fonts/shackled_xy_multi.64c",,2
 
