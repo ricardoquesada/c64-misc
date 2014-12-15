@@ -3,7 +3,7 @@
 ;
 
 !cpu 6510
-!to "build/scroller2x2.prg",cbm    ; output file
+!to "build/scroller2x2-multi.prg",cbm    ; output file
 
 
 ;============================================================
@@ -209,7 +209,7 @@ half_char      !byte 0
 
            ;          1         2         3
            ;0123456789012345678901234567890123456789
-label !scr "hello world abc def ghi jkl mno pqr stu vwxyz 01234567890(). ",$ff
+label !scr "hello world, testing 2x2 multi color scroller abcdefghijklmnopqrstuvwxzy 0123456789 ./(), ",$ff
 
 
 
