@@ -2,6 +2,9 @@
 ; double 8x8 scroller test
 ; Use ACME assembler
 ;
+; uses $fb, $fc, $fd, $fe (some music player won't work)
+; uses $f9, $fa (rs-232 communications won't work)
+; 
 
 !cpu 6510
 !to "build/scro-double-8x8.prg",cbm    ; output file
@@ -127,8 +130,10 @@ irq3
         lda #0
         sta $d020
 
-        ; scroll bottom
-        lda scroll_right
+        ; scroll right, bottom part
+        lda scroll_left
+        eor #$07    ; negate "scroll left" to simulate "scroll right"
+        and #$07
         sta $d016
 
         jmp $ea81
@@ -162,24 +167,20 @@ irq4
 scroll
 
         ; speed control
-        ldx scroll_left
+
+        ldx scroll_left         ; save current value in X
 
         !set i = SPEED
         !do {
             dec scroll_left
-            inc scroll_right
             !set i = i - 1
         } while i > 0
-
-        lda scroll_right
-        and #07
-        sta scroll_right
 
         lda scroll_left
         and #07
         sta scroll_left
     
-        cpx scroll_left
+        cpx scroll_left         ; new value is higher than the old one ? if so, then scroll
         bcc +
 
         rts
@@ -358,7 +359,6 @@ setup_charset
 ; variables
 sync            !byte 1
 scroll_left     !byte 7
-scroll_right    !byte 0
 label_index     !byte 0
 chars_scrolled  !byte 128
 current_char    !byte 0
