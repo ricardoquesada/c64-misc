@@ -22,7 +22,7 @@
 
 * = $c000                               ; start address for 6502 code
 
-SCREEN = $0400 + 9 * 40                 ; start at line 9
+SCREEN = $0400 + 4 * 40                 ; start at line 4 (kind of center of the screen)
 CHARSET = $3800
 SPEED = 5                               ; must be between 1 and 8
 
@@ -55,7 +55,7 @@ SPEED = 5                               ; must be between 1 and 8
         sta $0315
 
         ; raster interrupt
-        lda #185        ; last 8 lines of the screen
+        lda #81
         sta $d012
 
         ; clear interrupts and ACK irq
@@ -102,7 +102,7 @@ irq1
         lda #>irq2
         sta $0315
 
-        lda #250
+        lda #209
         sta $d012
 
         lda #0
@@ -122,7 +122,7 @@ irq2
         lda #>irq1
         sta $0315
 
-        lda #121
+        lda #81
         sta $d012
 
         lda #1
@@ -350,9 +350,10 @@ current_char    !byte 0
 
            ;          1         2         3
            ;0123456789012345678901234567890123456789
-label !scr "hello world! this is a test of a 8x16 scroller. do you like it? 0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ. ",$ff
+label !scr "hello world! this is a test of a 8x16 scroller. do you like it? ",$ff
 
 
 
 * = CHARSET
          !bin "fonts/devils_collection_25_y.64c",,2
+;         !bin "fonts/final_designer_scroll_y.64c",,2
