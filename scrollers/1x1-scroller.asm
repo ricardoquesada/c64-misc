@@ -1,9 +1,10 @@
 ;
 ; scrolling 1x1 test
+; Use ACME assembler
 ;
 
 !cpu 6510
-!to "build/scroller1x1-2.prg",cbm    ; output file
+!to "build/scroller1x1.prg",cbm    ; output file
 
 
 ;============================================================
@@ -181,7 +182,7 @@ label !scr "Hello World! abc DEF ghi JKL mno PQR stu VWX yz 01234567890 ().",$ff
 
 
 * = $1000
-         !bin  "music.sid",, $7c+2
+         !bin  "music.sid",,$7e
 
 * = $3800
          ; !bin "fonts/rambo_font.ctm",,24   ; skip first 24 bytes which is CharPad format information

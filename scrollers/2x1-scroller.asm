@@ -1,5 +1,6 @@
 ;
-; scrolling 1x1 test
+; scrolling 2x1 test
+; Use ACME assembler
 ;
 
 !cpu 6510
@@ -196,7 +197,7 @@ label !scr "hello world! abc def ghi jkl mno pqr stu vwx yz 01234567890 @!()/",$
 
 
 * = $1000
-         !bin  "music.sid",,$7c+2
+         !bin  "music.sid",,$7e
 
 * = $3800
          ; !bin "fonts/yie_are_kung_fu_x.64c",,2      ; skip the first 2 bytes (64c format)

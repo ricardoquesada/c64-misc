@@ -1,5 +1,6 @@
 ;
 ; scrolling 1x1 test
+; Use ACME assembler
 ;
 
 !cpu 6510
@@ -214,7 +215,7 @@ label !scr "hello world, testing 2x2 multi color scroller abcdefghijklmnopqrstuv
 
 
 * = $1000
-         !bin  "music.sid",,$7c+2
+         !bin  "music.sid",,$7e
 
 * = $3800
          !bin "fonts/shackled_xy_multi.64c",,2
