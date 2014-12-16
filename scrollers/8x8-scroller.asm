@@ -20,7 +20,7 @@
 
 SCREEN = $0400 + 17 * 40                ; start at line 16
 CHARSET = $3800
-SPEED = 1
+SPEED = 5                               ; must be between 1 and 8
 
 
         jsr $ff81 ;Init screen
@@ -119,24 +119,27 @@ irq2
 ; main scroll function
 ;
 scroll
-        dec speed
-        beq +
-        rts
 
-        ; restore speed
-+       lda #SPEED
-        sta speed
+        ; speed control
+        ldx scroll_x
 
-        ; scroll
-        dec scroll_x
+        !set i = SPEED
+        !do {
+            dec scroll_x
+            !set i = i - 1
+        } while i > 0
+
         lda scroll_x
         and #07
         sta scroll_x
-        cmp #07
-        beq +
+    
+        cpx scroll_x
+        bcc +
+
         rts
 
 +
+
         jsr scroll_screen
 
         lda chars_scrolled
@@ -274,7 +277,6 @@ setup_charset
 ; variables
 sync            !byte 1
 scroll_x        !byte 7
-speed           !byte SPEED
 label_index     !byte 0
 chars_scrolled  !byte 128
 current_char    !byte 0
