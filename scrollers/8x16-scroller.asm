@@ -22,7 +22,7 @@
 
 * = $c000                               ; start address for 6502 code
 
-SCREEN = $0400 + 4 * 40                 ; start at line 4 (kind of center of the screen)
+SCREEN = $0400 + 5 * 40                 ; start at line 4 (kind of center of the screen)
 CHARSET = $3800
 SPEED = 5                               ; must be between 1 and 8
 
@@ -55,7 +55,7 @@ SPEED = 5                               ; must be between 1 and 8
         sta $0315
 
         ; raster interrupt
-        lda #81
+        lda #89
         sta $d012
 
         ; clear interrupts and ACK irq
@@ -102,7 +102,7 @@ irq1
         lda #>irq2
         sta $0315
 
-        lda #209
+        lda #217
         sta $d012
 
         lda #0
@@ -122,7 +122,7 @@ irq2
         lda #>irq1
         sta $0315
 
-        lda #81
+        lda #89
         sta $d012
 
         lda #1
