@@ -1,13 +1,14 @@
 ;
-; double 8x8 scroller test
+; scroller 8x16 test
 ; Use ACME assembler
 ;
-; uses $fb, $fc, $fd, $fe (some music player won't work)
-; uses $f9, $fa (rs-232 communications won't work)
-; 
+; global registers:
+;   $f9/$fa -> screen pointer
+;   $fb/$fc -> charset upper part pointer
+;   $fd/$fe -> charset bottom part pointer
 
 !cpu 6510
-!to "build/scro-double-8x8.prg",cbm    ; output file
+!to "build/scroller8x8.prg",cbm    ; output file
 
 
 ;============================================================
@@ -21,7 +22,7 @@
 
 * = $c000                               ; start address for 6502 code
 
-SCREEN = $0400 + 0 * 40                 ; start at line 16
+SCREEN = $0400 + 9 * 40                 ; start at line 9
 CHARSET = $3800
 SPEED = 5                               ; must be between 1 and 8
 
@@ -54,7 +55,7 @@ SPEED = 5                               ; must be between 1 and 8
         sta $0315
 
         ; raster interrupt
-        lda #43         ; first 43 lines
+        lda #185        ; last 8 lines of the screen
         sta $d012
 
         ; clear interrupts and ACK irq
@@ -62,18 +63,36 @@ SPEED = 5                               ; must be between 1 and 8
         lda $dd0d
         asl $d019
 
+        jsr setup_block_char
+
         cli
 
-
-
 mainloop
-        lda #0
+        lda sync   ;init sync
+        and #$00
         sta sync
 -       cmp sync
         beq -
 
         jsr scroll
         jmp mainloop
+
+
+setup_block_char
+        ; charset = $3800
+        ; char used as block = $ff
+        ; $3800 + $ff * 8 = $3ff8
+        ldx #$ff
+        stx $3ff8
+        stx $3ff9
+        stx $3ffa
+        stx $3ffb
+        stx $3ffc
+        stx $3ffd
+        stx $3ffe
+        stx $3fff
+        rts
+
 
 irq1
         asl $d019
@@ -83,63 +102,19 @@ irq1
         lda #>irq2
         sta $0315
 
-        lda #115
-        sta $d012
-
-        lda #3
-        sta $d020
-
-        ; scroll left, upper part
-        lda scroll_left
-        sta $d016
-
-        jmp $ea81
-
-irq2
-        asl $d019
-
-        lda #<irq3
-        sta $0314
-        lda #>irq3
-        sta $0315
-
-        lda #186
-        sta $d012
-
-        lda #1
-        sta $d020
-
-        ; no scroll
-        lda #%00001000
-        sta $d016
-
-        jmp $ea81
-
-
-irq3
-        asl $d019
-
-        lda #<irq4
-        sta $0314
-        lda #>irq4
-        sta $0315
-
         lda #250
         sta $d012
 
         lda #0
         sta $d020
 
-        ; scroll right, bottom part
-        lda scroll_left
-        eor #$07    ; negate "scroll left" to simulate "scroll right"
-        and #$07
+        lda scroll_x
         sta $d016
 
         jmp $ea81
 
 
-irq4
+irq2
         asl $d019
 
         lda #<irq1
@@ -147,13 +122,13 @@ irq4
         lda #>irq1
         sta $0315
 
-        lda #49
+        lda #121
         sta $d012
 
         lda #1
         sta $d020
 
-        ; no scroll
+        ; no scrolling, 40 cols
         lda #%00001000
         sta $d016
 
@@ -167,20 +142,19 @@ irq4
 scroll
 
         ; speed control
-
-        ldx scroll_left         ; save current value in X
+        ldx scroll_x
 
         !set i = SPEED
         !do {
-            dec scroll_left
+            dec scroll_x
             !set i = i - 1
         } while i > 0
 
-        lda scroll_left
+        lda scroll_x
         and #07
-        sta scroll_left
+        sta scroll_x
     
-        cpx scroll_left         ; new value is higher than the old one ? if so, then scroll
+        cpx scroll_x
         bcc +
 
         rts
@@ -194,56 +168,51 @@ scroll
         bne +
 
         ; A and current_char will contain the char to print
-        ; $fd, $fe points to the charset definition of A
+        ; $fb/$fc, $fd/$fe  points to the charset definition of A
         jsr setup_charset
 
 +
         ; basic setup
         ldx #<SCREEN+39
         ldy #>SCREEN+39
-        stx $fb
-        sty $fc
-        ldx #<SCREEN+40*24
-        ldy #>SCREEN+40*24
         stx $f9
         sty $fa
 
         ldy #0              ; 8 rows
 
--       lda ($fd),y
+        ; start draw char loop
+        
+draw_char_loop
+        cpy #8
+        bmi +
+        lda ($fd),y         ; upper 8 chars
+        jmp ++
++       lda ($fb),y         ; lower 8 chars
+++
+
+        ; empty bit or not
         and chars_scrolled
-        beq empty_char
+        beq +
+;        lda current_char
+        lda #255            ; block char
+        jmp ++
 
-        lda current_char
-        jmp print_to_screen
-
-empty_char
-        lda #' '
-
-print_to_screen
++       lda #' '            ; empty char
+++
         ldx #0
-        sta ($fb,x)
         sta ($f9,x)
 
-        ; next line for upper scroller
+        ; for next line add #40
         clc
-        lda $fb
-        adc #40
-        sta $fb
-        bcc +
-        inc $fc
-
-        ; next line for bottom scroller
-+       sec 
         lda $f9
-        sbc #40
+        adc #40
         sta $f9
-        bcs +
-        dec $fa
+        bcc +
+        inc $fa
 
 +       iny                 ; next charset definition
-        cpy #8
-        bne -
+        cpy #16
+        bne draw_char_loop
 
 
         lsr chars_scrolled
@@ -264,10 +233,7 @@ endscroll
 scroll_screen
         ; move the chars to the left
         ldx #0
-        ldy #38
-
--       
-        lda SCREEN+40*0+1,x
+-       lda SCREEN+40*0+1,x
         sta SCREEN+40*0,x
         lda SCREEN+40*1+1,x
         sta SCREEN+40*1,x
@@ -283,27 +249,24 @@ scroll_screen
         sta SCREEN+40*6,x
         lda SCREEN+40*7+1,x
         sta SCREEN+40*7,x
-
-        lda SCREEN+40*17+0,y
-        sta SCREEN+40*17+1,y
-        lda SCREEN+40*18+0,y
-        sta SCREEN+40*18+1,y
-        lda SCREEN+40*19+0,y
-        sta SCREEN+40*19+1,y
-        lda SCREEN+40*20+0,y
-        sta SCREEN+40*20+1,y
-        lda SCREEN+40*21+0,y
-        sta SCREEN+40*21+1,y
-        lda SCREEN+40*22+0,y
-        sta SCREEN+40*22+1,y
-        lda SCREEN+40*23+0,y
-        sta SCREEN+40*23+1,y
-        lda SCREEN+40*24+0,y
-        sta SCREEN+40*24+1,y
-
+        lda SCREEN+40*8+1,x
+        sta SCREEN+40*8,x
+        lda SCREEN+40*9+1,x
+        sta SCREEN+40*9,x
+        lda SCREEN+40*10+1,x
+        sta SCREEN+40*10,x
+        lda SCREEN+40*11+1,x
+        sta SCREEN+40*11,x
+        lda SCREEN+40*12+1,x
+        sta SCREEN+40*12,x
+        lda SCREEN+40*13+1,x
+        sta SCREEN+40*13,x
+        lda SCREEN+40*14+1,x
+        sta SCREEN+40*14,x
+        lda SCREEN+40*15+1,x
+        sta SCREEN+40*15,x
         inx
-        dey
-        cpy #$ff
+        cpx #39
         bne -
         rts
 
@@ -337,7 +300,7 @@ setup_charset
         asl
         clc
         adc #<CHARSET
-        sta $fd
+        sta $fb
 
         ; multiply by 8 (MSB)
         ; 256 / 8 = 32
@@ -351,6 +314,28 @@ setup_charset
 
         clc
         adc #>CHARSET
+        sta $fc
+
+
+        ; pointer to the second part of the char
+        ; it is 64 chars ahead = 64 * 8 = 512 bytes = 
+        ; to reduce complixity on main code
+        ; pointer of bottom part will be 512 - 8
+        ; since it will be indexed by 'y', and 'y' will already have a value
+        ; of 8
+        sec
+        ; LBS
+        lda $fb
+        sbc #8
+        sta $fd
+
+        ; MBS
+        lda $fc
+        sbc #0
+        sta $fe
+
+        clc
+        adc #2
         sta $fe
 
         rts
@@ -358,21 +343,16 @@ setup_charset
 
 ; variables
 sync            !byte 1
-scroll_left     !byte 7
+scroll_x        !byte 7
 label_index     !byte 0
 chars_scrolled  !byte 128
 current_char    !byte 0
 
            ;          1         2         3
            ;0123456789012345678901234567890123456789
-label !scr " hello world! testing a double scroller demo. so far, so good. ",$ff
+label !scr "hello world! this is a test of a 8x16 scroller. do you like it? 0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ. ",$ff
 
 
 
 * = CHARSET
-;         !bin "fonts/1x1-inverted-chars.raw"
-;         !bin "fonts/yie_are_kung_fu.64c",,2    ; skip the first 2 bytes (64c format)
-;         !bin "fonts/geometrisch_4.64c",,2    ; skip the first 2 bytes (64c format)
-;         !bin "fonts/sm-mach.64c",,2    ; skip the first 2 bytes (64c format)
-         !bin "fonts/scrap_writer_iii_16.64c",,2    ; skip the first 2 bytes (64c format)
-
+         !bin "fonts/devils_collection_25_y.64c",,2
