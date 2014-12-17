@@ -2,13 +2,17 @@
 ; scroller 8x16 test
 ; Use ACME assembler
 ;
-; global registers:
-;   $f9/$fa -> screen pointer
-;   $fb/$fc -> charset upper part pointer
-;   $fd/$fe -> charset bottom part pointer
+; Zero Page global registers:
+;     ** MUST NOT be modifed by any other functions **
+;   $f7/$f8 -> charset upper part pointer
+;   $f9/$fa -> charset bottom part pointer
+;
+;
+; Zero Page: modified by the program, but can be modified by other functions
+;   $fb/$fc -> screen pointer
 
 !cpu 6510
-!to "build/scroller8x8.prg",cbm    ; output file
+!to "build/scroller8x16.prg",cbm    ; output file
 
 
 ;============================================================
@@ -25,6 +29,8 @@
 SCREEN = $0400 + 5 * 40                 ; start at line 4 (kind of center of the screen)
 CHARSET = $3800
 SPEED = 5                               ; must be between 1 and 8
+MUSIC_INIT = $1000
+MUSIC_PLAY = $1003
 
 
         jsr $ff81 ;Init screen
@@ -64,6 +70,7 @@ SPEED = 5                               ; must be between 1 and 8
         asl $d019
 
         jsr setup_block_char
+        jsr MUSIC_INIT
 
         cli
 
@@ -134,6 +141,10 @@ irq2
 
         inc sync
 
+        inc $d020
+        jsr MUSIC_PLAY
+        dec $d020
+
         jmp $ea31
 
 ;
@@ -153,7 +164,7 @@ scroll
         lda scroll_x
         and #07
         sta scroll_x
-    
+
         cpx scroll_x
         bcc +
 
@@ -168,26 +179,26 @@ scroll
         bne +
 
         ; A and current_char will contain the char to print
-        ; $fb/$fc, $fd/$fe  points to the charset definition of A
+        ; $f7/$f8, $f9/$fa  points to the charset definition of A
         jsr setup_charset
 
 +
         ; basic setup
         ldx #<SCREEN+39
         ldy #>SCREEN+39
-        stx $f9
-        sty $fa
+        stx $fb
+        sty $fc
 
         ldy #0              ; 8 rows
 
         ; start draw char loop
-        
+
 draw_char_loop
         cpy #8
         bmi +
-        lda ($fd),y         ; upper 8 chars
+        lda ($f9),y         ; upper 8 chars
         jmp ++
-+       lda ($fb),y         ; lower 8 chars
++       lda ($f7),y         ; lower 8 chars
 ++
 
         ; empty bit or not
@@ -200,15 +211,15 @@ draw_char_loop
 +       lda #' '            ; empty char
 ++
         ldx #0
-        sta ($f9,x)
+        sta ($fb,x)
 
         ; for next line add #40
         clc
-        lda $f9
+        lda $fb
         adc #40
-        sta $f9
+        sta $fb
         bcc +
-        inc $fa
+        inc $fc
 
 +       iny                 ; next charset definition
         cpy #16
@@ -233,41 +244,14 @@ endscroll
 scroll_screen
         ; move the chars to the left
         ldx #0
--       lda SCREEN+40*0+1,x
-        sta SCREEN+40*0,x
-        lda SCREEN+40*1+1,x
-        sta SCREEN+40*1,x
-        lda SCREEN+40*2+1,x
-        sta SCREEN+40*2,x
-        lda SCREEN+40*3+1,x
-        sta SCREEN+40*3,x
-        lda SCREEN+40*4+1,x
-        sta SCREEN+40*4,x
-        lda SCREEN+40*5+1,x
-        sta SCREEN+40*5,x
-        lda SCREEN+40*6+1,x
-        sta SCREEN+40*6,x
-        lda SCREEN+40*7+1,x
-        sta SCREEN+40*7,x
-        lda SCREEN+40*8+1,x
-        sta SCREEN+40*8,x
-        lda SCREEN+40*9+1,x
-        sta SCREEN+40*9,x
-        lda SCREEN+40*10+1,x
-        sta SCREEN+40*10,x
-        lda SCREEN+40*11+1,x
-        sta SCREEN+40*11,x
-        lda SCREEN+40*12+1,x
-        sta SCREEN+40*12,x
-        lda SCREEN+40*13+1,x
-        sta SCREEN+40*13,x
-        lda SCREEN+40*14+1,x
-        sta SCREEN+40*14,x
-        lda SCREEN+40*15+1,x
-        sta SCREEN+40*15,x
-        inx
-        cpx #39
-        bne -
+-
+                !for i, 0, 16 {
+                        lda SCREEN+40*i+1,x
+                        sta SCREEN+40*i,x
+                }
+                inx
+                cpx #39
+                bne -
         rts
 
 ;
@@ -300,7 +284,7 @@ setup_charset
         asl
         clc
         adc #<CHARSET
-        sta $fb
+        sta $f7
 
         ; multiply by 8 (MSB)
         ; 256 / 8 = 32
@@ -314,7 +298,7 @@ setup_charset
 
         clc
         adc #>CHARSET
-        sta $fc
+        sta $f8
 
 
         ; pointer to the second part of the char
@@ -325,18 +309,18 @@ setup_charset
         ; of 8
         sec
         ; LBS
-        lda $fb
+        lda $f7
         sbc #8
-        sta $fd
+        sta $f9
 
         ; MBS
-        lda $fc
+        lda $f8
         sbc #0
-        sta $fe
+        sta $fa
 
         clc
         adc #2
-        sta $fe
+        sta $fa
 
         rts
 
@@ -357,3 +341,7 @@ label !scr "hello world! this is a test of a 8x16 scroller. do you like it? ",$f
 * = CHARSET
          !bin "fonts/devils_collection_25_y.64c",,2
 ;         !bin "fonts/final_designer_scroll_y.64c",,2
+
+
+* = $1000
+         !bin  "music.sid",,$7e

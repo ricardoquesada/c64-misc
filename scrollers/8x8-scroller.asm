@@ -1,5 +1,5 @@
 ;
-; scroller 8x8 test
+; scrolling 8x8 test
 ; Use ACME assembler
 ;
 
@@ -18,9 +18,12 @@
 
 * = $c000                               ; start address for 6502 code
 
-SCREEN = $0400 + 17 * 40                ; start at line 16
+SCREEN = $0400 + 16 * 40                ; start at line 16
 CHARSET = $3800
-SPEED = 5                               ; must be between 1 and 8
+SPEED = 1
+
+MUSIC_INIT = $1000
+MUSIC_PLAY = $1003
 
 
         jsr $ff81 ;Init screen
@@ -59,6 +62,11 @@ SPEED = 5                               ; must be between 1 and 8
         lda $dd0d
         asl $d019
 
+        lda #$00
+        tax
+        tay
+        jsr MUSIC_INIT      ; Init music
+
         cli
 
 
@@ -70,7 +78,7 @@ mainloop
 -       cmp sync
         beq -
 
-        jsr scroll
+        jsr scroll1
         jmp mainloop
 
 irq1
@@ -113,95 +121,30 @@ irq2
 
         inc sync
 
+;        inc $d020
+        jsr MUSIC_PLAY
+;        dec $d020
         jmp $ea31
 
-;
-; main scroll function
-;
-scroll
+scroll1
+        dec speed
+        beq +
+        rts
 
-        ; speed control
-        ldx scroll_x
+        ; restore speed
++       lda #SPEED
+        sta speed
 
-        !set i = SPEED
-        !do {
-            dec scroll_x
-            !set i = i - 1
-        } while i > 0
-
+        ; scroll
+        dec scroll_x
         lda scroll_x
         and #07
         sta scroll_x
-    
-        cpx scroll_x
-        bcc +
-
+        cmp #07
+        beq +
         rts
 
 +
-
-        jsr scroll_screen
-
-        lda chars_scrolled
-        cmp #%10000000
-        bne +
-
-        ; A and current_char will contain the char to print
-        ; $fd, $fe points to the charset definition of A
-        jsr setup_charset
-
-+
-        ; basic setup
-        ldx #<SCREEN+39
-        ldy #>SCREEN+39
-        stx $fb
-        sty $fc
-
-        ldy #0              ; 8 rows
-
--       lda ($fd),y
-        and chars_scrolled
-        beq empty_char
-
-        lda current_char
-        jmp print_to_screen
-
-empty_char
-        lda #' '
-
-print_to_screen
-        ldx #0
-        sta ($fb,x)
-
-        ; for next line add #40
-        clc
-        lda $fb
-        adc #40
-        sta $fb
-        bcc +
-        inc $fc
-
-+       iny                 ; next charset definition
-        cpy #8
-        bne -
-
-
-        lsr chars_scrolled
-        bcc endscroll
-
-        lda #128
-        sta chars_scrolled
-
-        inc label_index
-
-endscroll
-        rts
-
-;
-; args: -
-; modifies: A, X, Status
-;
-scroll_screen
         ; move the chars to the left
         ldx #0
 -       lda SCREEN+40*0+1,x
@@ -223,14 +166,7 @@ scroll_screen
         inx
         cpx #39
         bne -
-        rts
 
-;
-; Args: -
-; Modifies A, X, Status
-; returns A: the character to print
-;
-setup_charset
         ; put next char in column 40
         ldx label_index
         lda label,x
@@ -238,58 +174,72 @@ setup_charset
         bne +
 
         ; reached $ff ? Then start from the beginning
-        lda #128
-        sta chars_scrolled
         lda #0
         sta label_index
+        sta chars_scrolled
         lda label
-+
-        sta current_char
 
-        tax
-
-        ; address = CHARSET + 8 * index
-        ; multiply by 8 (LSB)
-        asl
-        asl
-        asl
-        clc
-        adc #<CHARSET
++       tax
+        ; where to put the chars
+        lda #<SCREEN+39
+        sta $fc
+        lda #>SCREEN+39
         sta $fd
 
-        ; multiply by 8 (MSB)
-        ; 256 / 8 = 32
-        ; 32 = %00100000
-        txa
-        lsr
-        lsr
-        lsr
-        lsr
-        lsr
+        ldy #8
 
-        clc
-        adc #>CHARSET
-        sta $fe
+-       lda CHARSET,x
+        and chars_scrolled
+        beq empty_char
+        lda #0
+        jmp print_to_screen
 
+empty_char
+        lda #1
+
+print_to_screen
+        sta ($fc),y
+
+        ; next line #40
+        lda $fc
+        adc #40
+        sta $fc
+        bcc +
+        inc $fd
+
++       inx                 ; next charset definition
+        dey
+        bne -
+
+
+        lsr chars_scrolled
+        bcc endscroll
+
+        lda #128
+        sta chars_scrolled
+
+        inc label_index
+
+endscroll
         rts
 
 
 ; variables
 sync            !byte 1
 scroll_x        !byte 7
+speed           !byte SPEED
 label_index     !byte 0
 chars_scrolled  !byte 128
-current_char    !byte 0
 
            ;          1         2         3
            ;0123456789012345678901234567890123456789
-label !scr "Hello World! This is a test 0123456789...",$ff
+label !scr "hello world! abc def ghi jkl mno pqr stu vwx yz 01234567890 @!()/",$ff
 
 
+
+* = $1000
+         !bin  "music.sid",,$7e
 
 * = CHARSET
-;         !bin "fonts/1x1-inverted-chars.raw"
-;         !bin "fonts/yie_are_kung_fu.64c",,2    ; skip the first 2 bytes (64c format)
-;         !bin "fonts/geometrisch_4.64c",,2    ; skip the first 2 bytes (64c format)
-         !bin "fonts/sm-mach.64c",,2    ; skip the first 2 bytes (64c format)
+         !bin "fonts/1x1-inverted-chars.raw"
 
