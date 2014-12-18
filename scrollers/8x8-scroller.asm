@@ -121,10 +121,11 @@ irq2
 
         inc sync
 
-;        inc $d020
+        inc $d020
         jsr MUSIC_PLAY
-;        dec $d020
+        dec $d020
         jmp $ea31
+
 
 scroll1
         dec speed
@@ -147,25 +148,14 @@ scroll1
 +
         ; move the chars to the left
         ldx #0
--       lda SCREEN+40*0+1,x
-        sta SCREEN+40*0,x
-        lda SCREEN+40*1+1,x
-        sta SCREEN+40*1,x
-        lda SCREEN+40*2+1,x
-        sta SCREEN+40*2,x
-        lda SCREEN+40*3+1,x
-        sta SCREEN+40*3,x
-        lda SCREEN+40*4+1,x
-        sta SCREEN+40*4,x
-        lda SCREEN+40*5+1,x
-        sta SCREEN+40*5,x
-        lda SCREEN+40*6+1,x
-        sta SCREEN+40*6,x
-        lda SCREEN+40*7+1,x
-        sta SCREEN+40*7,x
-        inx
-        cpx #39
-        bne -
+-
+                !for i, 0, 8 {
+                        lda SCREEN+40*i+1,x
+                        sta SCREEN+40*i,x
+                }
+                inx
+                cpx #39
+                bne -
 
         ; put next char in column 40
         ldx label_index
@@ -188,28 +178,30 @@ scroll1
 
         ldy #8
 
--       lda CHARSET,x
-        and chars_scrolled
-        beq empty_char
-        lda #0
-        jmp print_to_screen
+-
+            ; print 8 rows
+            lda CHARSET,x
+            and chars_scrolled
+            beq empty_char
+            lda #0
+            jmp print_to_screen
 
 empty_char
-        lda #1
+            lda #1
 
 print_to_screen
-        sta ($fc),y
+            sta ($fc),y
 
-        ; next line #40
-        lda $fc
-        adc #40
-        sta $fc
-        bcc +
-        inc $fd
+            ; next line #40
+            lda $fc
+            adc #40
+            sta $fc
+            bcc +
+            inc $fd
 
-+       inx                 ; next charset definition
-        dey
-        bne -
++           inx                 ; next charset definition
+            dey
+            bne -
 
 
         lsr chars_scrolled

@@ -151,7 +151,6 @@ irq2
 ; main scroll function
 ;
 scroll
-
         ; speed control
         ldx scroll_x
 
@@ -194,36 +193,36 @@ scroll
         ; start draw char loop
 
 draw_char_loop
-        cpy #8
-        bmi +
-        lda ($f9),y         ; upper 8 chars
-        jmp ++
-+       lda ($f7),y         ; lower 8 chars
+                cpy #8
+                bmi +
+                lda ($f9),y         ; upper 8 chars
+                jmp ++
++               lda ($f7),y         ; lower 8 chars
 ++
 
-        ; empty bit or not
-        and chars_scrolled
-        beq +
-;        lda current_char
-        lda #255            ; block char
-        jmp ++
+                ; empty bit or not
+                and chars_scrolled
+                beq +
+;               lda current_char
+                lda #255            ; block char
+                jmp ++
 
-+       lda #' '            ; empty char
++               lda #' '            ; empty char
 ++
-        ldx #0
-        sta ($fb,x)
+                ldx #0
+                sta ($fb,x)
 
-        ; for next line add #40
-        clc
-        lda $fb
-        adc #40
-        sta $fb
-        bcc +
-        inc $fc
+                ; for next line add #40
+                clc
+                lda $fb
+                adc #40
+                sta $fb
+                bcc +
+                inc $fc
 
-+       iny                 ; next charset definition
-        cpy #16
-        bne draw_char_loop
++               iny                 ; next charset definition
+                cpy #16
+                bne draw_char_loop
 
 
         lsr chars_scrolled
