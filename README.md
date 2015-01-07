@@ -1,5 +1,6 @@
-# cocos2d for the Commodore 64
+# 64 tricks
 
-A port of cocos2d for the Commodore 64.
+In this repo I'll put the different tricks that I'm learning
 
-Why? Because
+Don't expect cutting-edge stuff. Only basic routines that I find useful.
+
