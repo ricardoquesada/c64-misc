@@ -1,63 +1,51 @@
-;
-; scrolling 8x8 test
-; Use ACME assembler
-;
+//
+// scrolling 8x8 test
+// Use ACME assembler
+//
 
-!cpu 6510
-!to "build/scroller8x8.prg",cbm    ; output file
+.pc =$0801 "Basic Upstart Program"
+:BasicUpstart($c000)
 
+.pc = $c000 "Main Program"
 
-;============================================================
-; BASIC loader with start address $c000
-;============================================================
+.label SCREEN = $0400 + 16 * 40                 // start at line 4 (kind of center of the screen)
+.label CHARSET = $3800
+.const SPEED = 1                                // must be between 1 and 8
 
-* = $0801                               ; BASIC start address (#2049)
-!byte $0d,$08,$dc,$07,$9e,$20,$34,$39   ; BASIC loader to start at $c000...
-!byte $31,$35,$32,$00,$00,$00           ; puts BASIC line 2012 SYS 49152
+.var music = LoadSid("music.sid")
 
+        jsr $ff81 //Init screen
 
-* = $c000                               ; start address for 6502 code
-
-SCREEN = $0400 + 16 * 40                ; start at line 16
-CHARSET = $3800
-SPEED = 1
-
-MUSIC_INIT = $1000
-MUSIC_PLAY = $1003
-
-
-        jsr $ff81 ;Init screen
-
-        ; default is #$15  #00010101
+        // default is #$15  #00010101
         lda #%00011110
-        sta $d018 ;Logo font at $3800
+        sta $d018 //Logo font at $3800
 
         sei
 
-        ; turn off cia interrups
+        // turn off cia interrups
         lda #$7f
         sta $dc0d
         sta $dd0d
 
-        lda $d01a       ; enable raster irq
+        lda $d01a       // enable raster irq
         ora #$01
         sta $d01a
 
-        lda $d011       ; clear high bit of raster line
+        lda $d011       // clear high bit of raster line
         and #$7f
         sta $d011
 
-        ; irq handler
+        // irq handler
         lda #<irq1
         sta $0314
         lda #>irq1
         sta $0315
 
-        ; raster interrupt
-        lda #185        ; last 8 lines of the screen
+        // raster interrupt
+        lda #185        // last 8 lines of the screen
         sta $d012
 
-        ; clear interrupts and ACK irq
+        // clear interrupts and ACK irq
         lda $dc0d
         lda $dd0d
         asl $d019
@@ -65,23 +53,24 @@ MUSIC_PLAY = $1003
         lda #$00
         tax
         tay
-        jsr MUSIC_INIT      ; Init music
+
+        lda #music.startSong-1
+        jsr music.init 
 
         cli
 
 
-
-mainloop
-        lda sync   ;init sync
+mainloop:
+        lda sync   //init sync
         and #$00
         sta sync
--       cmp sync
-        beq -
+!:      cmp sync
+        beq !-
 
         jsr scroll1
         jmp mainloop
 
-irq1
+irq1:
         asl $d019
 
         lda #<irq2
@@ -101,7 +90,7 @@ irq1
         jmp $ea81
 
 
-irq2
+irq2:
         asl $d019
 
         lda #<irq1
@@ -115,62 +104,63 @@ irq2
         lda #1
         sta $d020
 
-        ; no scrolling, 40 cols
+        // no scrolling, 40 cols
         lda #%00001000
         sta $d016
 
         inc sync
 
         inc $d020
-        jsr MUSIC_PLAY
+        jsr music.play 
         dec $d020
+
         jmp $ea31
 
 
-scroll1
+scroll1:
         dec speed
-        beq +
+        beq !+
         rts
 
-        ; restore speed
-+       lda #SPEED
+        // restore speed
+!:      lda #SPEED
         sta speed
 
-        ; scroll
+        // scroll
         dec scroll_x
         lda scroll_x
         and #07
         sta scroll_x
         cmp #07
-        beq +
+        beq !+
         rts
 
-+
-        ; move the chars to the left
+!:
+        // move the chars to the left
         ldx #0
--
-                !for i, 0, 8 {
-                        lda SCREEN+40*i+1,x
-                        sta SCREEN+40*i,x
-                }
-                inx
-                cpx #39
-                bne -
+!:
+        .for(var i=0;i<8;i++) {
+            lda SCREEN+40*i+1,x
+            sta SCREEN+40*i,x
+        }
+        inx
+        cpx #39
+        bne !-
 
-        ; put next char in column 40
+        // put next char in column 40
         ldx label_index
         lda label,x
         cmp #$ff
-        bne +
+        bne !+
 
-        ; reached $ff ? Then start from the beginning
+        // reached $ff ? Then start from the beginning
         lda #0
         sta label_index
         sta chars_scrolled
         lda label
 
-+       tax
-        ; where to put the chars
+!:      tax
+        // where to put the chars
         lda #<SCREEN+39
         sta $fc
         lda #>SCREEN+39
@@ -178,30 +168,32 @@ scroll1
 
         ldy #8
 
--
-            ; print 8 rows
+        {
+!loop:
+            // print 8 rows
             lda CHARSET,x
             and chars_scrolled
             beq empty_char
             lda #0
             jmp print_to_screen
 
-empty_char
+empty_char:
             lda #1
 
-print_to_screen
+print_to_screen:
             sta ($fc),y
 
-            ; next line #40
+            // next line #40
             lda $fc
             adc #40
             sta $fc
-            bcc +
+            bcc !+
             inc $fd
 
-+           inx                 ; next charset definition
+!:          inx                 // next charset definition
             dey
-            bne -
+            bne !loop-
+        }
 
 
         lsr chars_scrolled
@@ -212,26 +204,29 @@ print_to_screen
 
         inc label_index
 
-endscroll
+endscroll:
         rts
 
 
-; variables
-sync            !byte 1
-scroll_x        !byte 7
-speed           !byte SPEED
-label_index     !byte 0
-chars_scrolled  !byte 128
-
-           ;          1         2         3
-           ;0123456789012345678901234567890123456789
-label !scr "hello world! abc def ghi jkl mno pqr stu vwx yz 01234567890 @!()/",$ff
+// variables
+sync:            .byte 1
+scroll_x:        .byte 7
+speed:           .byte SPEED
+label_index:     .byte 0
+chars_scrolled:  .byte 128
 
 
+label:
+                .text "hello world! abc def ghi jkl mno pqr stu vwx yz 01234567890 @!()/"
+                .byte $ff
 
-* = $1000
-         !bin  "music.sid",,$7e
 
-* = CHARSET
-         !bin "fonts/1x1-inverted-chars.raw"
+.pc = CHARSET "Chars"
+//         !bin "fonts/1x1-inverted-chars.raw"
+//         !bin "fonts/yie_are_kung_fu.64c",,2    // skip the first 2 bytes (64c format)
+//         !bin "fonts/geometrisch_4.64c",,2    // skip the first 2 bytes (64c format)
+//         !bin "fonts/sm-mach.64c",,2    // skip the first 2 bytes (64c format)
+         .import binary "fonts/1x1-inverted-chars.raw"
 
+.pc = music.location "Music"
+        .fill music.size, music.getData(i)
