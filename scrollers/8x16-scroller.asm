@@ -1,5 +1,6 @@
 //
 // scroller 8x16 test
+// Compile it with KickAssembler: http://www.theweb.dk/KickAssembler/Main.php
 //
 // Zero Page global registers:
 //     ** MUST NOT be modifed by any other functions **

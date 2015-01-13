@@ -1,14 +1,22 @@
 //
-// scrolling 8x8 test
-// Use ACME assembler
+// double 8x8 scroller test
+// Compile it with KickAssembler: http://www.theweb.dk/KickAssembler/Main.php
 //
+// Zero Page global registers:
+//     ** MUST NOT be modifed by any other functions **
+//   $f9/$fa -> charset
+//
+//
+// Zero Page: modified by the program, but can be modified by other functions
+//   $fb/$fc -> screen pointer (upper)
+
 
 .pc =$0801 "Basic Upstart Program"
 :BasicUpstart($c000)
 
 .pc = $c000 "Main Program"
 
-.label SCREEN = $0400 + 16 * 40                 // start at line 4 (kind of center of the screen)
+.label SCREEN = $0400 + 17 * 40                 // start at line 4 (kind of center of the screen)
 .label CHARSET = $3800
 .const SPEED = 1                                // must be between 1 and 8
 
@@ -54,6 +62,8 @@
         tax
         tay
 
+        jsr setup_block_char
+
         lda #music.startSong-1
         jsr music.init 
 
@@ -67,8 +77,26 @@ mainloop:
 !:      cmp sync
         beq !-
 
-        jsr scroll1
+        jsr scroll
         jmp mainloop
+
+
+setup_block_char:
+        // charset = $3800
+        // char used as block = $ff
+        // $3800 + $ff * 8 = $3ff8
+        ldx #%00000000
+        stx $3ff8
+
+        ldx #%11111110
+        stx $3ff9
+        stx $3ffa
+        stx $3ffb
+        stx $3ffc
+        stx $3ffd
+        stx $3ffe
+        stx $3fff
+        rts
 
 irq1:
         asl $d019
@@ -117,82 +145,72 @@ irq2:
         jmp $ea31
 
 
-scroll1:
-        dec speed
-        beq !+
-        rts
+scroll:
+        // speed control
+        ldx scroll_x
 
-        // restore speed
-!:      lda #SPEED
-        sta speed
+        .for(var i=SPEED;i>=0;i--) {
+            dec scroll_x
+        }
 
-        // scroll
-        dec scroll_x
         lda scroll_x
         and #07
         sta scroll_x
-        cmp #07
-        beq !+
+
+        cpx scroll_x
+        bcc !+
         rts
 
 !:
-        // move the chars to the left
-        ldx #0
-!:
-        .for(var i=0;i<8;i++) {
-            lda SCREEN+40*i+1,x
-            sta SCREEN+40*i,x
-        }
-        inx
-        cpx #39
-        bne !-
+        jsr scroll_screen
 
-        // put next char in column 40
-        ldx label_index
-        lda label,x
-        cmp #$ff
+        lda chars_scrolled
+        cmp #%10000000
         bne !+
 
-        // reached $ff ? Then start from the beginning
-        lda #0
-        sta label_index
-        sta chars_scrolled
-        lda label
+        // A and current_char will contain the char to print
+        // $f9/$fa points to the charset definition of A
+        jsr setup_charset
 
-!:      tax
-        // where to put the chars
-        lda #<SCREEN+39
-        sta $fc
-        lda #>SCREEN+39
-        sta $fd
+!:
+        // basic setup
+        ldx #<SCREEN+39
+        ldy #>SCREEN+39
+        stx $fb
+        sty $fc
 
-        ldy #8
+
+        ldy #0              // 8 rows
+
+        // start draw char loop
 
         {
-!loop:
-            // print 8 rows
-            lda CHARSET,x
+draw_char_loop:
+            lda ($f9),y         // upper 8 chars
+
+            // empty bit or not
             and chars_scrolled
-            beq empty_char
-            lda #0
-            jmp print_to_screen
+            beq !+
+//          lda current_char
+            lda #255            // block char
+            jmp !skip+
 
-empty_char:
-            lda #1
+!:          lda #' '            // empty char
+!skip:
+            ldx #0
+            sta ($fb,x)
 
-print_to_screen:
-            sta ($fc),y
-
-            // next line #40
-            lda $fc
+            // for next line add #40
+            clc
+            lda $fb
             adc #40
-            sta $fc
+            sta $fb
             bcc !+
-            inc $fd
+            inc $fc
 
-!:          inx                 // next charset definition
-            dey
-            bne !loop-
+!:          iny                 // next charset definition
+            cpy #8
+            bne draw_char_loop
         }
 
 
@@ -208,12 +226,77 @@ endscroll:
         rts
 
 
+//
+// args: -
+// modifies: A, X, Status
+//
+scroll_screen:
+        // move the chars to the left
+        ldx #0
+!:
+        .for(var i=0; i<8; i++) {
+            lda SCREEN+40*i+1,x
+            sta SCREEN+40*i,x
+        }
+        inx
+        cpx #39
+        bne !-
+        rts
+
+//
+// Args: -
+// Modifies A, X, Status
+// returns A: the character to print
+//
+setup_charset:
+        // put next char in column 40
+        ldx label_index
+        lda label,x
+        cmp #$ff
+        bne !+
+
+        // reached $ff ? Then start from the beginning
+        lda #%10000000
+        sta chars_scrolled
+        lda #0
+        sta label_index
+        lda label
+!:
+        sta current_char
+
+        tax
+
+        // address = CHARSET + 8 * index
+        // multiply by 8 (LSB)
+        asl
+        asl
+        asl
+        clc
+        adc #<CHARSET
+        sta $f9
+
+        // multiply by 8 (MSB)
+        // 256 / 8 = 32
+        // 32 = %00100000
+        txa
+        lsr
+        lsr
+        lsr
+        lsr
+        lsr
+
+        clc
+        adc #>CHARSET
+        sta $fa
+
+        rts
+
 // variables
 sync:            .byte 1
 scroll_x:        .byte 7
-speed:           .byte SPEED
 label_index:     .byte 0
 chars_scrolled:  .byte 128
+current_char:    .byte 0
 
 
 label:
@@ -222,11 +305,10 @@ label:
 
 
 .pc = CHARSET "Chars"
-//         !bin "fonts/1x1-inverted-chars.raw"
-//         !bin "fonts/yie_are_kung_fu.64c",,2    // skip the first 2 bytes (64c format)
-//         !bin "fonts/geometrisch_4.64c",,2    // skip the first 2 bytes (64c format)
-//         !bin "fonts/sm-mach.64c",,2    // skip the first 2 bytes (64c format)
-         .import binary "fonts/1x1-inverted-chars.raw"
+        // .import c64 "fonts/yie_are_kung_fu.64c"
+        // .import c64 "fonts/geometrisch_4.64c"
+        .import c64 "fonts/sm-mach.64c"
+         // .import binary "fonts/1x1-inverted-chars.raw"
 
 .pc = music.location "Music"
         .fill music.size, music.getData(i)

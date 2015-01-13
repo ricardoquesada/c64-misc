@@ -1,7 +1,7 @@
 //
 // scrolling 1x2 test
+// Compile it with KickAssembler: http://www.theweb.dk/KickAssembler/Main.php
 //
-
 
 .pc =$0801 "Basic Upstart Program"
 :BasicUpstart($c000)

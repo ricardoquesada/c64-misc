@@ -1,6 +1,6 @@
 //
 // double 8x8 scroller test
-// Use ACME assembler
+// Compile it with KickAssembler: http://www.theweb.dk/KickAssembler/Main.php
 //
 // Zero Page global registers:
 //     ** MUST NOT be modifed by any other functions **
@@ -299,7 +299,7 @@ setup_charset:
         bne !+
 
         // reached $ff ? Then start from the beginning
-        lda #128
+        lda #%10000000
         sta chars_scrolled
         lda #0
         sta label_index

@@ -1,7 +1,6 @@
 //
 // scrolling 1x1 test
-// Use KickAssembler
-// java -jar ~/bin/KickAssembler/KickAss.jar 1x1-scroller.asm  -vicesymbols
+// Compile it with KickAssembler: http://www.theweb.dk/KickAssembler/Main.php
 //
 
 
