@@ -11,12 +11,20 @@
 
 .pc = $c000 "Main Program"
 
-.label SCREEN = $0400 + 24 * 40
-.label SPEED = 1
+// Use 1 to enable raster-debugging in music
+.const DEBUG = 0
 
-.label MUSIC_INIT = $1000
-.label MUSIC_PLAY = $1003
+.const SCROLL_AT_LINE = 10
+.const RASTER_START = 50
 
+.const SCREEN = $0400 + SCROLL_AT_LINE * 40
+.const SPEED = 1
+
+.const MUSIC_INIT = $1000
+.const MUSIC_PLAY = $1003
+
+
+.var music = LoadSid("music.sid")
 
         jsr $ff81						// Init screen
 
@@ -46,7 +54,7 @@
         sta $0315
 
         // raster interrupt
-        lda #241
+        lda #[RASTER_START+SCROLL_AT_LINE*8]
         sta $d012
 
         // clear interrupts and ACK irq
@@ -57,10 +65,12 @@
         lda #$00
         tax
         tay
-        jsr MUSIC_INIT      // Init music
+
+        // init music
+        lda #music.startSong-1
+        jsr music.init  
 
         cli
-
 
 
 mainloop:
@@ -71,7 +81,6 @@ mainloop:
         beq !loop-
 
         jsr scroll1
-        jsr MUSIC_PLAY
         jmp mainloop
 
 irq1:
@@ -82,7 +91,8 @@ irq1:
         lda #>irq2
         sta $0315
 
-        lda #250
+        // FIXME Raster is not stable.
+        lda #RASTER_START+[SCROLL_AT_LINE+1]*8
         sta $d012
 
         lda #0
@@ -102,7 +112,9 @@ irq2:
         lda #>irq1
         sta $0315
 
-        lda #241
+        // FIXME If I don't add the -1 it won't scroll correctly.
+        // FIXME Raster is not stable.
+        lda #RASTER_START+SCROLL_AT_LINE*8-1                   
         sta $d012
 
         lda #1
@@ -114,10 +126,14 @@ irq2:
 
         inc sync
 
-        // inc $d020
-        // jsr MUSIC_PLAY
-        // dec $d020
+        .if (DEBUG==1) { inc $d020 }
+            
+        jsr music.play
+
+        .if (DEBUG==1) { dec $d020 }
+
         jmp $ea31
+
 
 scroll1:
         dec speed
@@ -175,11 +191,11 @@ label:
 
 
 
-.pc = $1000 "Music"
-		.import binary "music.sid",$7e
+.pc = music.location "Music"
+        .fill music.size, music.getData(i)
 
 .pc = $3800 "CharGen"
-         // .import binary "fonts/rambo_font.ctm",24    // skip first 24 bytes which is CharPad format information
-         // .import binary "fonts/yie_are_kung_fu.64c",2    // skip the first 2 bytes (64c format)
+        // .import binary "fonts/rambo_font.ctm",24    // skip first 24 bytes which is CharPad format information
+        // .import c64 "fonts/yie_are_kung_fu.64c"
+        // .import c64 "fonts/devils_collection_01.64c"
 		.import binary "fonts/1x1-inverted-chars.raw"
-         // .import binary "fonts/devils_collection_01.64c",2    // skip the first 2 bytes (64c format)

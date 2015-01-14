@@ -16,9 +16,15 @@
 
 .pc = $c000 "Main Program"
 
-.label SCREEN = $0400 + 17 * 40                 // start at line 4 (kind of center of the screen)
-.label CHARSET = $3800
-.const SPEED = 1                                // must be between 1 and 8
+// Use 1 to enable music-raster debug
+.const DEBUG = 0
+
+.const SCROLL_AT_LINE = 10
+.const RASTER_START = 50
+
+.const SCREEN = $0400 + SCROLL_AT_LINE * 40
+.const CHARSET = $3800
+.const SPEED = 5                                // must be between 1 and 8
 
 .var music = LoadSid("music.sid")
 
@@ -50,7 +56,7 @@
         sta $0315
 
         // raster interrupt
-        lda #185        // last 8 lines of the screen
+        lda #[RASTER_START+SCROLL_AT_LINE*8]
         sta $d012
 
         // clear interrupts and ACK irq
@@ -106,7 +112,7 @@ irq1:
         lda #>irq2
         sta $0315
 
-        lda #250
+        lda #RASTER_START+[SCROLL_AT_LINE+8]*8
         sta $d012
 
         lda #0
@@ -126,7 +132,7 @@ irq2:
         lda #>irq1
         sta $0315
 
-        lda #185
+        lda #RASTER_START+[SCROLL_AT_LINE]*8
         sta $d012
 
         lda #1
@@ -138,9 +144,9 @@ irq2:
 
         inc sync
 
-        inc $d020
+        .if (DEBUG==1) inc $d020
         jsr music.play 
-        dec $d020
+        .if (DEBUG==1) dec $d020
 
         jmp $ea31
 
