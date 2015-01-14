@@ -8,12 +8,16 @@
 
 .pc = $c000 "Main Program"
 
-.label SCREEN = $0400 + 23 * 40                     // start at line 23
-.label SPEED = 1
+// Use 1 to enable raster-debugging in music
+.const DEBUG = 0
 
-.label MUSIC_INIT = $1000
-.label MUSIC_PLAY = $1003
+.const SCROLL_AT_LINE = 23
+.const RASTER_START = 50
 
+.const SCREEN = $0400 + SCROLL_AT_LINE * 40
+.const SPEED = 1
+
+.var music = LoadSid("music.sid")
 
         jsr $ff81                                   // Init screen
 
@@ -43,7 +47,7 @@
         sta $0315
 
         // raster interrupt
-        lda #233
+        lda #RASTER_START+SCROLL_AT_LINE*8-1
         sta $d012
 
         // clear interrupts and ACK irq
@@ -54,7 +58,10 @@
         lda #$00
         tax
         tay
-        jsr MUSIC_INIT                              // Init music
+
+        // init music
+        lda #music.startSong-1
+        jsr music.init
 
         cli
 
@@ -69,7 +76,7 @@
         // char color
         ldx #0
         lda #$0b
-!:      sta $d800 + 23 * 40,x
+!:      sta $d800 + SCROLL_AT_LINE * 40,x
         inx
         cpx #80
         bne !-
@@ -84,7 +91,6 @@ mainloop:
         beq !-
 
         jsr scroll1
-        jsr MUSIC_PLAY
         jmp mainloop
 
 irq1:
@@ -95,14 +101,14 @@ irq1:
         lda #>irq2
         sta $0315
 
-        lda #250
+        lda #RASTER_START+[SCROLL_AT_LINE+2]*8
         sta $d012
 
         lda #0
         sta $d020
 
         lda scroll_x
-        ora #%00010000                              // set MCM on
+        ora #%00010000          // set MCM on
         sta $d016
 
         jmp $ea81
@@ -116,7 +122,9 @@ irq2:
         lda #>irq1
         sta $0315
 
-        lda #233
+        // FIXME If I don't add the -1 it won't scroll correctly.
+        // FIXME Raster is not stable.
+        lda #RASTER_START+SCROLL_AT_LINE*8-1
         sta $d012
 
         lda #1
@@ -128,9 +136,10 @@ irq2:
 
         inc sync
 
-        // inc $d020
-        // jsr MUSIC_PLAY
-        // dec $d020
+        .if (DEBUG==1) inc $d020
+        jsr music.play
+        .if (DEBUG==1) dec $d020
+
         jmp $ea31
 
 scroll1:
@@ -203,9 +212,10 @@ label:
                 .byte $ff
 
 
-.pc = $1000 "Music"
-                .import binary "music.sid",$7e
+.pc = music.location "Music"
+        .fill music.size, music.getData(i)
+
 
 .pc = $3800 "Chars"
-                .import c64 "fonts/shackled_xy_multi.64c"
+        .import c64 "fonts/shackled_xy_multi.64c"
 

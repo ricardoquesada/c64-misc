@@ -20,9 +20,6 @@
 .const SCREEN = $0400 + SCROLL_AT_LINE * 40
 .const SPEED = 1
 
-.const MUSIC_INIT = $1000
-.const MUSIC_PLAY = $1003
-
 
 .var music = LoadSid("music.sid")
 
