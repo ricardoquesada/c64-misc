@@ -54,7 +54,7 @@
         sta $0315
 
         // raster interrupt
-        lda #[RASTER_START+SCROLL_AT_LINE*8]
+        lda #RASTER_START+SCROLL_AT_LINE*8
         sta $d012
 
         // clear interrupts and ACK irq

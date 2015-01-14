@@ -17,9 +17,16 @@
 
 .pc = $c000 "Main Program"
 
-.label SCREEN = $0400 + 5 * 40                 // start at line 4 (kind of center of the screen)
-.label CHARSET = $3800
-.label SPEED = 5                               // must be between 1 and 8
+// Use 1 to enable music-raster debug
+.const DEBUG = 0
+
+.const SCROLL_AT_LINE = 5
+.const RASTER_START = 50
+
+.const SCREEN = $0400 + SCROLL_AT_LINE * 40
+
+.const CHARSET = $3800
+.const SPEED = 5                               // must be between 1 and 8
 
 .var music = LoadSid("music.sid")
 
@@ -51,15 +58,13 @@
         sta $0315
 
         // raster interrupt
-        lda #89
+        lda #RASTER_START+SCROLL_AT_LINE*8
         sta $d012
 
         // clear interrupts and ACK irq
         lda $dc0d
         lda $dd0d
         asl $d019
-
-        jsr setup_block_char
 
         lda #music.startSong-1
         jsr music.init  
@@ -77,22 +82,6 @@ mainloop:
         jmp mainloop
 
 
-setup_block_char:
-        // charset = $3800
-        // char used as block = $ff
-        // $3800 + $ff * 8 = $3ff8
-        ldx #$ff
-        stx $3ff8
-        stx $3ff9
-        stx $3ffa
-        stx $3ffb
-        stx $3ffc
-        stx $3ffd
-        stx $3ffe
-        stx $3fff
-        rts
-
-
 irq1:
         asl $d019
 
@@ -101,7 +90,7 @@ irq1:
         lda #>irq2
         sta $0315
 
-        lda #217
+        lda #RASTER_START+[SCROLL_AT_LINE+16]*8
         sta $d012
 
         lda #0
@@ -121,7 +110,9 @@ irq2:
         lda #>irq1
         sta $0315
 
-        lda #89
+        // FIXME If I don't add the -1 it won't scroll correctly.
+        // FIXME Raster is not stable.
+        lda #RASTER_START+SCROLL_AT_LINE*8-1
         sta $d012
 
         lda #1
@@ -133,9 +124,9 @@ irq2:
 
         inc sync
 
-        inc $d020
+        .if (DEBUG==1) inc $d020
         jsr music.play 
-        dec $d020
+        .if (DEBUG==1) dec $d020
 
         jmp $ea31
 
@@ -329,6 +320,16 @@ label:
 .pc = CHARSET "Chars"
         .import c64 "fonts/devils_collection_25_y.64c"
 //         !bin "fonts/final_designer_scroll_y.64c",,2
+
+.pc = CHARSET + 255 * 8 "Char #255"
+        .byte %11111110
+        .byte %10000010
+        .byte %10000010
+        .byte %10000010
+        .byte %10000010
+        .byte %10000010
+        .byte %11111110
+        .byte %00000000
 
 .pc = music.location "Music"
         .fill music.size, music.getData(i)

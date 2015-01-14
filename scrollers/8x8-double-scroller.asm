@@ -17,9 +17,20 @@
 
 .pc = $c000 "Main Program"
 
-.label SCREEN = $0400 + 0 * 40                 // start at line 4 (kind of center of the screen)
-.label CHARSET = $3800
-.const SPEED = 5                               // must be between 1 and 8
+// Use 1 to enable music-raster debug
+.const DEBUG = 0
+
+.const RASTER_START = 50
+
+.const SCROLL_1_AT_LINE = 2
+.const SCROLL_2_AT_LINE = 15
+
+.const SCREEN_1 = $0400 + SCROLL_1_AT_LINE * 40
+.const SCREEN_2 = $0400 + SCROLL_2_AT_LINE * 40
+
+.const CHARSET = $3800
+.const SPEED = 5            // must be between 1 and 8
+
 
 .var music = LoadSid("music.sid")
 
@@ -51,7 +62,7 @@
         sta $0315
 
         // raster interrupt
-        lda #43         // first 43 lines
+        lda #RASTER_START+SCROLL_1_AT_LINE*8
         sta $d012
 
         // clear interrupts and ACK irq
@@ -82,7 +93,7 @@ irq1:
         lda #>irq2
         sta $0315
 
-        lda #115
+        lda #RASTER_START+[SCROLL_1_AT_LINE+8]*8
         sta $d012
 
         lda #3
@@ -102,7 +113,9 @@ irq2:
         lda #>irq3
         sta $0315
 
-        lda #186
+        // FIXME If I don't add the -1 it won't scroll correctly.
+        // FIXME Raster is not stable.
+        lda #RASTER_START+[SCROLL_2_AT_LINE]*8-1
         sta $d012
 
         lda #1
@@ -123,7 +136,7 @@ irq3:
         lda #>irq4
         sta $0315
 
-        lda #250
+        lda #RASTER_START+[SCROLL_2_AT_LINE+8]*8
         sta $d012
 
         lda #0
@@ -146,7 +159,9 @@ irq4:
         lda #>irq1
         sta $0315
 
-        lda #49
+        // FIXME If I don't add the -1 it won't scroll correctly.
+        // FIXME Raster is not stable.
+        lda #RASTER_START+SCROLL_1_AT_LINE*8-1
         sta $d012
 
         lda #1
@@ -158,9 +173,9 @@ irq4:
 
         inc sync
 
-        inc $d020
+        .if (DEBUG==1) inc $d020
         jsr music.play 
-        dec $d020
+        .if (DEBUG==1) dec $d020
         
         jmp $ea31
 
@@ -194,17 +209,17 @@ scroll:
         bne !+
 
         // A and current_char will contain the char to print
-        // $fd, $fe points to the charset definition of A
+        // $f9/$fa points to the charset definition of the char
         jsr setup_charset
 
 !:
         // basic setup
-        ldx #<SCREEN+39
-        ldy #>SCREEN+39
+        ldx #<SCREEN_1+39
+        ldy #>SCREEN_1+39
         stx $fb
         sty $fc
-        ldx #<SCREEN+40*24
-        ldy #>SCREEN+40*24
+        ldx #<SCREEN_2+8*40
+        ldy #>SCREEN_2+8*40
         stx $fd
         sty $fe
 
@@ -265,19 +280,19 @@ endscroll:
 // modifies: A, X, Status
 //
 scroll_screen:
-        // move the chars to the left
+        // move the chars to the left and right
         ldx #0
         ldy #38
 
 !:      
         .for(var i=0;i<8;i++) { 
-            lda SCREEN+40*i+1,x
-            sta SCREEN+40*i,x
+            lda SCREEN_1+40*i+1,x
+            sta SCREEN_1+40*i+0,x
         }
 
         .for(var i=0;i<8;i++) {
-            lda SCREEN+40*[17+i]+0,y
-            sta SCREEN+40*[17+i]+1,y
+            lda SCREEN_2+40*i+0,y
+            sta SCREEN_2+40*i+1,y
         }
 
         inx
@@ -351,11 +366,7 @@ label:
 
 
 .pc = CHARSET "Chars"
-//         !bin "fonts/1x1-inverted-chars.raw"
-//         !bin "fonts/yie_are_kung_fu.64c",,2    // skip the first 2 bytes (64c format)
-//         !bin "fonts/geometrisch_4.64c",,2    // skip the first 2 bytes (64c format)
-//         !bin "fonts/sm-mach.64c",,2    // skip the first 2 bytes (64c format)
-            .import c64 "fonts/scrap_writer_iii_16.64c"
+        .import c64 "fonts/scrap_writer_iii_16.64c"
 
 .pc = music.location "Music"
         .fill music.size, music.getData(i)

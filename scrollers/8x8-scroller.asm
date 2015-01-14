@@ -56,7 +56,7 @@
         sta $0315
 
         // raster interrupt
-        lda #[RASTER_START+SCROLL_AT_LINE*8]
+        lda #RASTER_START+SCROLL_AT_LINE*8
         sta $d012
 
         // clear interrupts and ACK irq
@@ -67,8 +67,6 @@
         lda #$00
         tax
         tay
-
-        jsr setup_block_char
 
         lda #music.startSong-1
         jsr music.init 
@@ -86,23 +84,6 @@ mainloop:
         jsr scroll
         jmp mainloop
 
-
-setup_block_char:
-        // charset = $3800
-        // char used as block = $ff
-        // $3800 + $ff * 8 = $3ff8
-        ldx #%00000000
-        stx $3ff8
-
-        ldx #%11111110
-        stx $3ff9
-        stx $3ffa
-        stx $3ffb
-        stx $3ffc
-        stx $3ffd
-        stx $3ffe
-        stx $3fff
-        rts
 
 irq1:
         asl $d019
@@ -311,10 +292,18 @@ label:
 
 
 .pc = CHARSET "Chars"
-        // .import c64 "fonts/yie_are_kung_fu.64c"
-        // .import c64 "fonts/geometrisch_4.64c"
-        .import c64 "fonts/sm-mach.64c"
-         // .import binary "fonts/1x1-inverted-chars.raw"
+        // skip last character since it will be overriden
+        .import c64 "fonts/sm-mach.64c",0,255*8
+
+.pc = CHARSET + 255 * 8 "Char #255"
+        .byte %11111110
+        .byte %10000010
+        .byte %10000010
+        .byte %10000010
+        .byte %10000010
+        .byte %10000010
+        .byte %11111110
+        .byte %00000000
 
 .pc = music.location "Music"
         .fill music.size, music.getData(i)
