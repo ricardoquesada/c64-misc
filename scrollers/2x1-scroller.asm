@@ -7,18 +7,19 @@
 :BasicUpstart($c000)
 
 
-// defines
+// Use 1 to enable raster-debugging in music
+.const DEBUG = 0
+
+.const SCROLL_AT_LINE = 24
+.const RASTER_START = 50
+
+.const SCREEN = $0400 + SCROLL_AT_LINE * 40
+.const SPEED = 1
+
+.var music = LoadSid("music.sid")
 
 
 .pc = $c000 "Main Program"
-
-.label SCREEN = $0400 + 24 * 40                // start at line 24
-.label SPEED = 1
-
-.label MUSIC_INIT = $1000
-.label MUSIC_PLAY = $1003
-
-
         jsr $ff81                               // Init screen
 
         // default is #$15  #00010101
@@ -47,7 +48,7 @@
         sta $0315
 
         // raster interrupt
-        lda #241
+        lda #RASTER_START+SCROLL_AT_LINE*8-1
         sta $d012
 
         // clear interrupts and ACK irq
@@ -58,10 +59,12 @@
         lda #$00
         tax
         tay
-        jsr MUSIC_INIT                          // Init music
+
+        // Init music
+        lda #music.startSong-1
+        jsr music.init
 
         cli
-
 
 
 mainloop:
@@ -72,7 +75,6 @@ mainloop:
         beq !-
 
         jsr scroll1
-        jsr MUSIC_PLAY
         jmp mainloop
 
 irq1:
@@ -83,7 +85,7 @@ irq1:
         lda #>irq2
         sta $0315
 
-        lda #250
+        lda #RASTER_START+[SCROLL_AT_LINE+1]*8
         sta $d012
 
         lda #0
@@ -103,7 +105,7 @@ irq2:
         lda #>irq1
         sta $0315
 
-        lda #241
+        lda #RASTER_START+SCROLL_AT_LINE*8-1
         sta $d012
 
         lda #1
@@ -115,9 +117,10 @@ irq2:
 
         inc sync
 
-        // inc $d020
-        // jsr MUSIC_PLAY
-        // dec $d020
+        .if (DEBUG==1) inc $d020
+        jsr music.play
+        .if (DEBUG==1) dec $d020
+
         jmp $ea31
 
 scroll1:
@@ -188,8 +191,8 @@ label:          .text "hello world! abc def ghi jkl mno pqr stu vwx yz 012345678
                 .byte $ff
 
 
-.pc = $1000 "Music"
-         .import binary "music.sid",$7e
+.pc = music.location "Music"
+        .fill music.size, music.getData(i)
 
 .pc = $3800 "Char"
          // !bin "fonts/yie_are_kung_fu_x.64c",,2      ; skip the first 2 bytes (64c format)

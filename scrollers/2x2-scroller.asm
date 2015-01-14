@@ -8,11 +8,16 @@
 
 .pc = $c000 "Main Program"
 
-.label SCREEN = $0400 + 23 * 40                // start at line 23
-.label SPEED = 1
+// Use 1 to enable raster-debugging in music
+.const DEBUG = 0
 
-.label MUSIC_INIT = $1000
-.label MUSIC_PLAY = $1003
+.const SCROLL_AT_LINE = 23
+.const RASTER_START = 50
+
+.const SCREEN = $0400 + SCROLL_AT_LINE * 40
+.const SPEED = 1
+
+.var music = LoadSid("music.sid")
 
 
         jsr $ff81                               // Init screen
@@ -54,7 +59,9 @@
         lda #$00
         tax
         tay
-        jsr MUSIC_INIT                          // Init music
+
+        lda #music.startSong-1
+        jsr music.init                          // Init music
 
         cli
 
@@ -68,7 +75,6 @@ mainloop:
         beq !-
 
         jsr scroll1
-        jsr MUSIC_PLAY
         jmp mainloop
 
 irq1:
@@ -111,9 +117,9 @@ irq2:
 
         inc sync
 
-        // inc $d020
-        // jsr MUSIC_PLAY
-        // dec $d020
+        .if (DEBUG==1) inc $d020
+        jsr music.play
+        .if (DEBUG==1) dec $d020
         jmp $ea31
 
 scroll1:
@@ -184,10 +190,9 @@ half_char:          .byte 0
 label:              .text "hello world! abc def ghi jkl mnopqrstuvwxyz 01234567890 .()"
                     .byte $ff
 
-.pc = $1000 "Music"
-                .import binary "music.sid",$7e
+.pc = music.location "Music"
+        .fill music.size, music.getData(i)
 
 .pc = $3800 "Chars"
                 .import binary "fonts/2x2-inverted-chars.raw"
-                // !bin "fonts/rambo_xy.64c",384,24
 
