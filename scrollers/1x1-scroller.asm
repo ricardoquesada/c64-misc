@@ -14,7 +14,7 @@
 // Use 1 to enable raster-debugging in music
 .const DEBUG = 0
 
-.const SCROLL_AT_LINE = 10
+.const SCROLL_AT_LINE = 12
 .const RASTER_START = 50
 
 .const SCREEN = $0400 + SCROLL_AT_LINE * 40
@@ -77,7 +77,7 @@ mainloop:
 !loop:	cmp sync
         beq !loop-
 
-        jsr scroll1
+        jsr scroll
         jmp mainloop
 
 irq1:
@@ -132,21 +132,22 @@ irq2:
         jmp $ea31
 
 
-scroll1:
-        dec speed
-        bne endscroll
+scroll:
+        // speed control
+        ldx scroll_x
 
-        // restore speed
-        lda #SPEED
-        sta speed
+        .for(var i=SPEED;i>=0;i--) {
+            dec scroll_x
+        }
 
-        // scroll
-        dec scroll_x
         lda scroll_x
         and #07
         sta scroll_x
-        cmp #07
-        bne endscroll
+
+        cpx scroll_x
+        bcc !+
+        rts
+!:
 
         // move the chars to the left
         ldx #0
