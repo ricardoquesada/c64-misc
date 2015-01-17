@@ -11,7 +11,7 @@
 // Use 1 to enable raster-debugging in music
 .const DEBUG = 0
 
-.const SCROLL_AT_LINE = 23
+.const SCROLL_AT_LINE = 12
 .const RASTER_START = 50
 
 .const SCREEN = $0400 + SCROLL_AT_LINE * 40
@@ -94,6 +94,9 @@ mainloop:
         jmp mainloop
 
 irq1:
+        // make the raster more stable
+        .for(var i=0;i<10;i++)
+            nop
         asl $d019
 
         lda #<irq2
