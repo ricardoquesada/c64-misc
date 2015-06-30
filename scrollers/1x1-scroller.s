@@ -15,7 +15,7 @@ RASTER_START = 50
 SCREEN = $0400 + SCROLL_AT_LINE * 40
 SPEED = 1
 
-
+.macpack cbm
 .code
 
 ;.var music = LoadSid("music.sid")
@@ -185,7 +185,7 @@ speed:          .byte SPEED
 lines_scrolled: .byte 0
 
 label:
-            .byte "Hello World! abc DEF ghi JKL mno PQR stu VWX yz 01234567890 ()."
+            scrcode "Hello World! abc DEF ghi JKL mno PQR stu VWX yz 01234567890 ()."
             .byte $ff
 
 

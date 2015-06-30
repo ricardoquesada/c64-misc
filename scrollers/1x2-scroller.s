@@ -1,7 +1,7 @@
 ;
 ; scrolling 1x2 test
 ; Compile it using cc65: http://cc65.github.io/cc65/
-; 
+;
 ; Command line:
 ;    cl65 -o file.prg -u __EXEHDR__ -t c64 -C Linkfile 1x2-scroller.s
 ;
@@ -19,6 +19,7 @@ SPEED = 1
 
 
 ;.var music = LoadSid("music.sid")
+.macpack cbm
 
 .code
 
@@ -181,7 +182,7 @@ speed:          .byte SPEED
 lines_scrolled: .byte 0
 
 label:
-                .asciiz "hello world! abc def ghi jkl mno pqr stu vwx yz 01234567890 .()"
+                scrcode "hello world! abc def ghi jkl mno pqr stu vwx yz 01234567890 .()"
                 .byte $ff
 
 
