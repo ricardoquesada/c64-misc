@@ -7,7 +7,7 @@
 ;
 
 ; Use 1 to enable raster-debugging in music
-DEBUG = 0
+DEBUG = 1
 
 SCROLL_AT_LINE = 12
 RASTER_START = 50
@@ -15,10 +15,11 @@ RASTER_START = 50
 SCREEN = $0400 + SCROLL_AT_LINE * 40
 SPEED = 1
 
+MUSIC_INIT = $1000
+MUSIC_PLAY = $1003
+
 .macpack cbm
 .code
-
-;.var music = LoadSid("music.sid")
 
         jsr $ff81           ; Init screen
 
@@ -61,8 +62,8 @@ SPEED = 1
         tay
 
         ; init music
-;        lda #music.startSong-1
-;        jsr music.init
+        lda #0
+        jsr MUSIC_INIT
 
         cli
 
@@ -120,11 +121,15 @@ irq2:
 
         inc sync
 
-;        .if (DEBUG==1) { inc $d020 }
-;
-;        jsr music.play
-;
-;        .if (DEBUG==1) { dec $d020 }
+.if DEBUG = 1
+        inc $d020
+.endif
+
+        jsr MUSIC_PLAY
+
+.if DEBUG = 1
+        dec $d020
+.endif
 
         jmp $ea31
 
@@ -133,9 +138,9 @@ scroll:
         ; speed control
         ldx scroll_x
 
-        .repeat SPEED
-            dec scroll_x
-        .endrepeat
+.repeat SPEED
+        dec scroll_x
+.endrepeat
 
         lda scroll_x
         and #07
@@ -189,12 +194,11 @@ label:
             .byte $ff
 
 
-
-;.pc = music.location "Music"
-;        .fill music.size, music.getData(i)
-
 .segment "CHARSET"
         ; .import binary "fonts/rambo_font.ctm",24    // skip first 24 bytes which is CharPad format information
         ; .import c64 "fonts/yie_are_kung_fu.64c"
         ; .import c64 "fonts/devils_collection_01.64c"
         .incbin "fonts/1x1-inverted-chars.raw"
+
+.segment "SIDMUSIC"
+         .incbin "music.sid",$7e
