@@ -8,16 +8,13 @@
 
 
 ; Use 1 to enable raster-debugging in music
-DEBUG = 0
+DEBUG = 1
 
 SCROLL_AT_LINE = 12
 RASTER_START = 50
 
 SCREEN = $0400 + SCROLL_AT_LINE * 40
 SPEED = 2
-
-;.var music = LoadSid("music.sid")
-
 
 .macpack cbm
 .code
@@ -62,8 +59,8 @@ SPEED = 2
         tay
 
         ; Init music
-;        lda #music.startSong-1
-;        jsr music.init
+        lda #0          ; start song
+        jsr $1000
 
         cli
 
@@ -118,9 +115,15 @@ irq2:
 
         inc sync
 
-;        .if (DEBUG==1) inc $d020
-;        jsr music.play
-;        .if (DEBUG==1) dec $d020
+.if DEBUG = 1
+        inc $d020
+.endif
+
+;        jsr $1003
+
+.if DEBUG = 1
+        dec $d020
+.endif
 
         jmp $ea31
 
@@ -128,9 +131,9 @@ scroll:
         ; speed control
         ldx scroll_x
 
-        .repeat SPEED
+.repeat SPEED
             dec scroll_x
-        .endrepeat
+.endrepeat
 
         lda scroll_x
         and #07
@@ -199,3 +202,6 @@ label:          scrcode "hello world! abc def ghi jkl mno pqr stu vwx yz 0123456
 .segment "CHARSET"
          ; !bin "fonts/yie_are_kung_fu_x.64c",,2      ; skip the first 2 bytes (64c format)
          .incbin "fonts/devils_collection_21_x.64c",2
+
+.segment "SIDMUSIC"
+         .incbin "music.sid"
