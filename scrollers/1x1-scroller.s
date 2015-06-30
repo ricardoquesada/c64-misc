@@ -1,9 +1,9 @@
 ;
 ; scrolling 1x1 test
 ; Compile it using cc65: http://cc65.github.io/cc65/
-; 
+;
 ; Command line:
-;    cl65 -o file.prg -u __EXEHDR__ -t c64 -C Linkfile 1x1-scroller.s
+;    cl65 -o file.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg 1x1-scroller.s
 ;
 
 ; Use 1 to enable raster-debugging in music
