@@ -28,13 +28,14 @@ SCROLL_2_AT_LINE = 15
 SCREEN_1 = $0400 + SCROLL_1_AT_LINE * 40
 SCREEN_2 = $0400 + SCROLL_2_AT_LINE * 40
 
-CHARSET = $3800
 
 MUSIC_INIT = $1000
 MUSIC_PLAY = $1003
 
 SPEED = 5            ; must be between 1 and 8
 
+; exported by the linker
+.import __CHARSET_LOAD__
 
 .macpack cbm         ; adds support for scrcode
 
@@ -339,7 +340,7 @@ setup_charset:
         asl
         asl
         clc
-        adc #<CHARSET
+        adc #<__CHARSET_LOAD__
         sta $f9
 
         ; multiply by 8 (MSB)
@@ -353,7 +354,7 @@ setup_charset:
         lsr
 
         clc
-        adc #>CHARSET
+        adc #>__CHARSET_LOAD__
         sta $fa
 
         rts
