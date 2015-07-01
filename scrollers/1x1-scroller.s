@@ -6,6 +6,11 @@
 ;    cl65 -o file.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg 1x1-scroller.s
 ;
 
+.macpack cbm
+
+; exported by the linker
+.import __SIDMUSIC_LOAD__
+
 ; Use 1 to enable raster-debugging in music
 DEBUG = 1
 
@@ -15,10 +20,9 @@ RASTER_START = 50
 SCREEN = $0400 + SCROLL_AT_LINE * 40
 SPEED = 1
 
-MUSIC_INIT = $1000
-MUSIC_PLAY = $1003
+MUSIC_INIT = __SIDMUSIC_LOAD__
+MUSIC_PLAY = __SIDMUSIC_LOAD__ + 3
 
-.macpack cbm
 .code
 
         jsr $ff81           ; Init screen

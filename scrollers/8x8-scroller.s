@@ -14,6 +14,9 @@
 ;   $fb/$fc -> screen pointer (upper)
 
 
+; exported by the linker
+.import __CHARSET_LOAD__, __SIDMUSIC_LOAD__
+
 ; Use 1 to enable music-raster debug
 DEBUG = 1
 
@@ -23,11 +26,8 @@ RASTER_START = 50
 SCREEN = $0400 + SCROLL_AT_LINE * 40
 SPEED = 5                                ; must be between 1 and 8
 
-MUSIC_INIT = $1000
-MUSIC_PLAY = $1003
-
-; exported by the linker
-.import __CHARSET_LOAD__
+MUSIC_INIT = __SIDMUSIC_LOAD__
+MUSIC_PLAY = __SIDMUSIC_LOAD__ + 3
 
 .macpack cbm         ; adds support for scrcode
 

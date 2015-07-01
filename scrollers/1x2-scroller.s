@@ -7,6 +7,11 @@
 ;
 
 
+.macpack cbm
+
+; exported by the linker
+.import __SIDMUSIC_LOAD__
+
 ; defines
 ; Use 1 to enable raster-debugging in music
 DEBUG = 1
@@ -17,10 +22,8 @@ RASTER_START = 50
 SCREEN = $0400 + SCROLL_AT_LINE * 40
 SPEED = 1
 
-MUSIC_INIT = $1000
-MUSIC_PLAY = $1003
-
-.macpack cbm
+MUSIC_INIT = __SIDMUSIC_LOAD__
+MUSIC_PLAY = __SIDMUSIC_LOAD__ + 3
 
 .segment "CODE"
 

@@ -3,7 +3,7 @@
 ; Compile it using cc65: http://cc65.github.io/cc65/
 ;
 ; Command line:
-;    cl65 -o file.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg 8x8-scroller.s
+;    cl65 -o file.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg 8x16-scroller.s
 ;
 ;
 ; Zero Page global registers:
@@ -17,6 +17,12 @@
 
 
 
+.macpack cbm         ; adds support for scrcode
+
+; exported by the linker
+.import __CHARSET_LOAD__, __SIDMUSIC_LOAD__
+
+
 ; Use 1 to enable music-raster debug
 DEBUG = 1
 
@@ -27,13 +33,8 @@ SCREEN = $0400 + SCROLL_AT_LINE * 40
 
 SPEED = 5                               ; must be between 1 and 8
 
-MUSIC_INIT = $1000
-MUSIC_PLAY = $1003
-
-; exported by the linker
-.import __CHARSET_LOAD__
-
-.macpack cbm         ; adds support for scrcode
+MUSIC_INIT = __SIDMUSIC_LOAD__
+MUSIC_PLAY = __SIDMUSIC_LOAD__ + 3
 
 .segment "CODE"
 
