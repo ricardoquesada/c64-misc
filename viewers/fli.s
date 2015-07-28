@@ -108,7 +108,7 @@ start:
 ;	ldx #__BORDERCOLOR__
 	ldx #0
 	stx $d020
-	ldx $7f40		; backgrounnd color
+	ldx __FLI_LOAD__ + $4340; backgrounnd color
 	stx $d021
 	; COPY 3c00-3fff to d800-dbff
 	ldy #$04
@@ -161,3 +161,6 @@ uv8:
 ; link a demo picture
 .segment "FLI"
 	.incbin "test.fli",2
+;	.incbin "pvm-color-sensitive.fli",2
+;	.incbin "pvm-yuv-distance.fli",2
+;	.incbin "pvm-rgb-distance.fli",2
