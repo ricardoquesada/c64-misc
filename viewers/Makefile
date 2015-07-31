@@ -3,8 +3,8 @@
 .SILENT:
 
 IMAGE = "fli_dist.d64"
-C1541 = /Applications/Vice/tools/c1541
-X64 = /Applications/Vice/x64.app/Contents/MacOS/x64
+C1541 = c1541
+X64 = x64
 
 all: disk
 
