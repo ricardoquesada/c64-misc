@@ -23,24 +23,43 @@ start:
 
 	sei
 
+	; turn off BASIC + Kernal. More RAM
+	lda #$35
+	sta $01
+
 	ldx #<irq
 	ldy #>irq
-	stx $0314
-	sty $0315
+	stx $fffe
+	sty $ffff
 
-;	jsr sync_irq_timer
+	lda #00
+	sta $d01a
+
+	jsr sync_irq_timer
 	cli
 
 	jmp *
 
 irq:
+	pha			; saves A, X, Y
+	txa
+	pha
+	tya
+	pha
+
 	inc $0400
-	bne :+
-	inc $0401
-	bne :+
-	inc $0402
-:
-	jmp $ea31
+	jsr MUSIC_PLAY
+
+	asl $d019
+	lda $dc0d
+
+	pla			; restores A, X, Y
+	tay
+	pla
+	tax
+	pla
+	rti			; restores previous PC, status
+
 
 sync_irq_timer:
 
