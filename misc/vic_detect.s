@@ -87,12 +87,13 @@ label_error:
 ;--------------------------------------------------------------------------
 ; char detect_pal_paln_ntsc(void)
 ;--------------------------------------------------------------------------
-; It counts how many rasterlines were drawn in 312*63-1 (19655) cycles. 
+; It counts how many rasterlines were drawn in 312*63 (19656) cycles. 
+; 312*63-1 is passed to the timer, since it requires one less.
 ;
-; In PAL,      (312 by 63)  19655/63 = 312  -> 312 % 312   (00, $00)
-; In PAL-N,    (312 by 65)  19655/65 = 302  -> 302 % 312   (46, $2e)
-; In NTSC,     (263 by 65)  19655/65 = 302  -> 302 % 263   (39, $27)
-; In NTSC Old, (262 by 64)  19655/64 = 307  -> 307 % 262   (45, $2d) 
+; In PAL,      (312 by 63)  19656/63 = 312  -> 312 % 312   (00, $00)
+; In PAL-N,    (312 by 65)  19656/65 = 302  -> 302 % 312   (46, $2e)
+; In NTSC,     (263 by 65)  19656/65 = 302  -> 302 % 263   (39, $27)
+; In NTSC Old, (262 by 64)  19656/64 = 307  -> 307 % 262   (45, $2d) 
 ;
 ; Return values:
 ;   $01 --> PAL
