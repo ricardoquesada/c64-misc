@@ -2,33 +2,16 @@
 
 .SILENT:
 
-IMAGE = "fli_dist.d64"
-C1541 = c1541
 X64 = x64
+all: fli koala
 
-all: disk
+fli:
+	cl65 -d -g -Ln fli.sym -u __EXEHDR__ -t c64 -o fli.prg -C fli.cfg fli.s
+	$(X64) -moncommands fli.sym fli.prg
 
-SRC=fli.s
-prg:
-	cl65 -d -g -Ln fli.sym -u __EXEHDR__ -t c64 -o fli.prg -C fli.cfg ${SRC}
-
-disk: prg
-	$(C1541) -format "fli,rq" d64 fli.d64
-	$(C1541) fli.d64 -write fli.prg
-	$(C1541) fli.d64 -list
-
-dist: prg
-	exomizer sfx sys -o fli_exo.prg fli.prg
-	$(C1541) -format "fli dist,rq" d64 $(IMAGE)
-	$(C1541) $(IMAGE) -write fli_exo.prg "the race"
-	$(C1541) $(IMAGE) -list
-	rm -f intro.o fli.prg fli_exo.prg
-
-test: disk
-	$(X64) -moncommands fli.sym fli.d64
-
-testdist: dist
-	$(X64) -moncommands fli.sym $(IMAGE)
+koala:
+	cl65 -d -g -Ln koala.sym -u __EXEHDR__ -t c64 -o koala.prg -C koala.cfg koala.s
+	$(X64) -moncommands koala.sym koala.prg
 
 clean:
-	rm -f *~ *.o fli.prg fli_exo.prg fli.d64 fli.sym $(IMAGE)
+	rm -f *~ *.o *.prg
