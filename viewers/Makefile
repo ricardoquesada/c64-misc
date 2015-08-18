@@ -14,4 +14,4 @@ koala:
 	$(X64) -moncommands koala.sym koala.prg
 
 clean:
-	rm -f *~ *.o *.prg
+	rm -f *~ *.o *.prg *.sym
