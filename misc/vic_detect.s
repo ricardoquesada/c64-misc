@@ -11,9 +11,6 @@
 
 .segment "CODE"
 
-	lda #$35
-	sta $01
-
 	jsr detect_pal_paln_ntsc
 
 	cmp #$01
@@ -108,6 +105,9 @@ vic_video_type: .byte $00
 .export detect_pal_paln_ntsc
 .proc detect_pal_paln_ntsc
 	sei
+
+	lda #$35
+	sta $01
 
 	; wait for start of raster (more stable results)
 :	lda $d012
