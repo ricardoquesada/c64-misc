@@ -6,7 +6,7 @@
 '''
 Easing Table Generator
 '''
-from __future__ import division
+from __future__ import division, unicode_literals, print_function
 import sys
 import os
 import getopt
@@ -15,7 +15,21 @@ import math
 
 __docformat__ = 'restructuredtext'
 
-# python
+
+def cubic_bezier_at(t, a, b, c, d):
+    return (
+        ((1-t)**3) * a +
+        3 * ((1-t)**2) * t * b +
+        3 * (1-t) * (t**2) * c +
+        (t**3) * d
+        )
+
+
+def bezier(time):
+    easeOutSine = [0.39, 0.575, 0.565, 1]
+    x = cubic_bezier_at(time, 0, 0.39, 0.565, 1)
+    y = cubic_bezier_at(time, 0, 0.575, 1, 1)
+    return x
 
 
 def easeInSine(time):
@@ -51,7 +65,7 @@ def cubicEaseIn(time):
 
 
 def cubicEaseOut(time):
-    time = time -1
+    time = time - 1
     return (time * time * time + 1)
 
 
@@ -100,6 +114,7 @@ def quintEaseInOut(time):
 formulas = {
     'easeInSine': easeInSine,
     'easeOutSine': easeOutSine,
+    'bezier': bezier
 }
 
 
