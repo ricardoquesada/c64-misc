@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # ----------------------------------------------------------------------------
 # Easing Table Generator
-# (c) 2015 Ricardo Quesada
+# Some formulas were taken from: http://easings.net/
+# Others were taken from: https://github.com/cocos2d/cocos2d-x/blob/cocos2d-x-3.8rc0/cocos/2d/CCTweenFunction.cpp
+# Rest by Ricardo Quesada
 # ----------------------------------------------------------------------------
 '''
 Easing Table Generator
