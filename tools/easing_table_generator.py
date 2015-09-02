@@ -29,7 +29,11 @@ def cubic_bezier_at(t, a, b, c, d):
 #
 # Different formulas. Must start with 'fn_'
 #
-# fn_bezier recieves 4 control poitns. a usually is 0, and d is usually 1
+def fn_linear(time):
+    return time
+
+
+# fn_bezier recieves 4 control points. Usually 'a' is 0, and 'd' is 1
 def fn_bezier(time, a, b, c, d):
     return cubic_bezier_at(time, a, b, c, d)
 
@@ -38,6 +42,7 @@ def fn_sin(time):
     return math.sin(time * math.pi)
 
 
+# Sine
 def fn_easeInSine(time):
     # return -1 * math.cos(time * math.pi/2) + 1
     # cubic-bezier(0.47, 0, 0.745, 0.715)
@@ -56,6 +61,7 @@ def fn_easeInOutSine(time):
     return cubic_bezier_at(time, 0, 0.05, 0.95, 1)
 
 
+# Quad
 def fn_easeInQuad(time):
     # return time * time
     # cubic-bezier(0.55, 0.085, 0.68, 0.53);
@@ -78,6 +84,7 @@ def fn_easeInOutQuad(time):
     return cubic_bezier_at(time, 0, 0.03, 0.955, 1)
 
 
+# Cubic
 def fn_easeInCubic(time):
     # return time * time * time
     # cubic-bezier(0.55, 0.055, 0.675, 0.19);
@@ -101,7 +108,149 @@ def fn_easeInOutCubic(time):
     return cubic_bezier_at(time, 0, 0.045, 1, 1)
 
 
-#
+# Quart
+def fn_easeInQuart(time):
+    return cubic_bezier_at(time, 0, 0.03, 0.22, 1)
+
+
+def fn_easeOutQuart(time):
+    return cubic_bezier_at(time, 0, 0.84, 1, 1)
+
+
+def fn_easeInOutQuart(time):
+    return cubic_bezier_at(time, 0, 0, 1, 1),
+
+
+# Quint
+def fn_easeInQuint(time):
+    return cubic_bezier_at(time, 0, 0.05, 0.06, 1)
+
+
+def fn_easeOutQuint(time):
+    return cubic_bezier_at(time, 0, 1, 1, 1)
+
+
+def fn_easeInOutQuint(time):
+    return cubic_bezier_at(time, 0, 0, 1, 1)
+
+
+# Expo
+def fn_easeInExpo(time):
+    return cubic_bezier_at(time, 0, 0.05, 0.035, 1)
+
+
+def fn_easeOutExpo(time):
+    return cubic_bezier_at(time, 0, 1, 1, 1)
+
+
+def fn_easeInOutExpo(time):
+    return cubic_bezier_at(time, 0, 0, 1, 1)
+
+
+# Circ
+def fn_easeInCirc(time):
+    return cubic_bezier_at(time, 0, 0.04, 0.335, 1)
+
+
+def fn_easeOutCirc(time):
+    return cubic_bezier_at(time, 0, 0.82, 1, 1)
+
+
+def fn_easeInOutCirc(time):
+    return cubic_bezier_at(time, 0, 0.135, 0.86, 1)
+
+
+# Back
+def fn_easeInBack(time):
+    return cubic_bezier_at(time, 0, -0.28, 0.045, 1)
+
+
+def fn_easeOutBack(time):
+    return cubic_bezier_at(time, 0, 0.885, 1.275, 1)
+
+
+def fn_easeInOutBack(time):
+    return cubic_bezier_at(time, 0, -0.55, 1.55, 1)
+
+
+# Elastic
+def fn_easeInElastic(time, period):
+    newT = 0
+    if time == 0 or time == 1:
+        newT = time;
+    else:
+        s = period / 4;
+        time = time - 1;
+        newT = -math.pow(2, 10 * time) * math.sin((time - s) * math.pi * 2 / period)
+
+    return newT
+
+
+def fn_easeOutElastic(time, period):
+    newT = 0
+    if time == 0 or time == 1:
+        newT = time;
+    else:
+        s = period / 4
+        newT = math.pow(2, -10 * time) * math.sin((time - s) * math.pi * 2 / period) + 1
+
+    return newT
+
+
+def fn_easeInOutElastic(time, period):
+    newT = 0
+    if time == 0 or time == 1:
+        newT = time
+    else:
+        time = time * 2
+        if not period:
+            period = 0.3 * 1.5
+
+        s = period / 4
+
+        time = time - 1
+        if time < 0:
+            newT = -0.5 * math.pow(2, 10 * time) * math.sin((time -s) * math.pi * 2 / period)
+        else:
+            newT = math.pow(2, -10 * time) * math.sin((time - s) * math.pi * 2 / period) * 0.5 + 1
+
+    return newT
+
+
+# Bounce
+def bounce_time(time):
+    if time < 1 / 2.75:
+        return 7.5625 * time * time
+    elif time < 2 / 2.75:
+        time = time - 1.5 / 2.75
+        return 7.5625 * time * time + 0.75
+    elif time < 2.5 / 2.75:
+        time = time - 2.25 / 2.75;
+        return 7.5625 * time * time + 0.9375
+
+    time = time - 2.625 / 2.75
+    return 7.5625 * time * time + 0.984375
+
+
+def fn_easeInBounce(time):
+    return 1 - bounce_time(1 - time)
+
+
+def fn_easeOutBounce(time):
+    return bounce_time(time)
+
+
+def fn_easeInOutBounce(time):
+    newT = 0
+    if time < 0.5:
+        time = time * 2;
+        newT = (1 - bounce_time(1 - time)) * 0.5
+    else:
+        newT = bounce_time(time * 2 - 1) * 0.5 + 0.5
+
+    return newT
+
+
 def parse_args(formula):
     # valid formula formats:
     #  - 'easeInSine'
@@ -131,7 +280,8 @@ def print_list(l):
 
 
 def convert_value(val, maxvalue):
-    return int(round(val * float(maxvalue)))
+    # FIXME: for 16-bit numbers, this should be 65536
+    return int(round(val * float(maxvalue))) % 256
 
 
 def run(formula, steps, maxvalue, reverse):
