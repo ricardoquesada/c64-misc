@@ -14,7 +14,6 @@ import sys
 import os
 import getopt
 import math
-import inspect
 
 
 __docformat__ = 'restructuredtext'
@@ -181,10 +180,10 @@ def fn_easeInElastic(time, period=0.3):
     """recieves 1 argument"""
     newT = 0
     if time == 0 or time == 1:
-        newT = time;
+        newT = time
     else:
-        s = period / 4;
-        time = time - 1;
+        s = period / 4
+        time = time - 1
         newT = -math.pow(2, 10 * time) * math.sin((time - s) * math.pi * 2 / period)
 
     return newT
@@ -194,7 +193,7 @@ def fn_easeOutElastic(time, period=0.3):
     """recieves 1 argument"""
     newT = 0
     if time == 0 or time == 1:
-        newT = time;
+        newT = time
     else:
         s = period / 4
         newT = math.pow(2, -10 * time) * math.sin((time - s) * math.pi * 2 / period) + 1
@@ -216,7 +215,7 @@ def fn_easeInOutElastic(time, period=0.3):
 
         time = time - 1
         if time < 0:
-            newT = -0.5 * math.pow(2, 10 * time) * math.sin((time -s) * math.pi * 2 / period)
+            newT = -0.5 * math.pow(2, 10 * time) * math.sin((time - s) * math.pi * 2 / period)
         else:
             newT = math.pow(2, -10 * time) * math.sin((time - s) * math.pi * 2 / period) * 0.5 + 1
 
@@ -224,19 +223,19 @@ def fn_easeInOutElastic(time, period=0.3):
 
 
 # Ease - Bounce
-def bounce_time_old(time,bounces):
+def bounce_time_old(time, bounces):
     ret = 0
     if time < 1 / 2.75:
-        ret = math.pow(2.75,2) * time * time
+        ret = math.pow(2.75, 2) * time * time
     elif time < 2 / 2.75:
         time = time - 1.5 / 2.75
-        ret = math.pow(2.75,2) * time * time + 0.75
+        ret = math.pow(2.75, 2) * time * time + 0.75
     elif time < 2.5 / 2.75:
-        time = time - 2.25 / 2.75;
-        ret = math.pow(2.75,2) * time * time + 0.9375
+        time = time - 2.25 / 2.75
+        ret = math.pow(2.75, 2) * time * time + 0.9375
     else:
         time = time - 2.625 / 2.75
-        ret = math.pow(2.75,2) * time * time + 0.984375
+        ret = math.pow(2.75, 2) * time * time + 0.984375
     return ret
 
 
@@ -245,7 +244,7 @@ def bounce_time_new(time, bounces):
     ret = 1
     # magic = 2 + 2/2 + 2/4 + 2/8 + ...
     # magic -= 1 since the first "2" should be "2/2" since it is a half jump
-    l = [2.0/pow(2,x) for x in range(bounces)]
+    l = [2.0/pow(2, x) for x in range(bounces)]
     # first value is always 1, since it is 2/2
     l[0] = 1
     magic = sum(l)
@@ -256,11 +255,11 @@ def bounce_time_new(time, bounces):
     else:
         # skip first bounce
         accum = l[0]
-        for i in range(1,bounces):
+        for i in range(1, bounces):
             accum = accum + l[i]
             if time < (accum/magic):
                 time = time - (accum-l[i]/2) / magic
-                s = math.pow(l[i]/2,2)
+                s = math.pow(l[i]/2, 2)
                 ret = math.pow(magic, 2) * time * time + (1-s)
                 break
     return ret
@@ -281,12 +280,13 @@ def fn_easeOutBounce(time, bounces=4):
 def fn_easeInOutBounce(time, bounces=4):
     newT = 0
     if time < 0.5:
-        time = time * 2;
+        time = time * 2
         newT = (1 - bounce_time(1 - time, bounces)) * 0.5
     else:
         newT = bounce_time(time * 2 - 1, bounces) * 0.5 + 0.5
 
     return newT
+
 
 #
 def parse_args(formula):
@@ -326,7 +326,7 @@ def run(formula, steps, maxvalue, reverse):
     formula_name, args = parse_args(formula)
     try:
         fn = getattr(sys.modules[__name__], formula_name)
-    except AttributeError, e:
+    except AttributeError:
         raise Exception("Invalid formula name: %s" % formula)
     l = []
 
