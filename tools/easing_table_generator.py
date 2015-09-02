@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # ----------------------------------------------------------------------------
 # Easing Table Generator
+#
 # Some formulas were taken from: http://easings.net/
 # Others were taken from: https://github.com/cocos2d/cocos2d-x/blob/cocos2d-x-3.8rc0/cocos/2d/CCTweenFunction.cpp
-# Rest by Ricardo Quesada
+# The rest, by Ricardo Quesada
 # ----------------------------------------------------------------------------
 '''
 Easing Table Generator
@@ -44,7 +45,7 @@ def fn_sin(time):
     return math.sin(time * math.pi)
 
 
-# Sine
+# Ease - Sine
 def fn_easeInSine(time):
     # return -1 * math.cos(time * math.pi/2) + 1
     # cubic-bezier(0.47, 0, 0.745, 0.715)
@@ -63,7 +64,7 @@ def fn_easeInOutSine(time):
     return cubic_bezier_at(time, 0, 0.05, 0.95, 1)
 
 
-# Quad
+# Ease - Quad
 def fn_easeInQuad(time):
     # return time * time
     # cubic-bezier(0.55, 0.085, 0.68, 0.53);
@@ -86,7 +87,7 @@ def fn_easeInOutQuad(time):
     return cubic_bezier_at(time, 0, 0.03, 0.955, 1)
 
 
-# Cubic
+# Ease - Cubic
 def fn_easeInCubic(time):
     # return time * time * time
     # cubic-bezier(0.55, 0.055, 0.675, 0.19);
@@ -110,7 +111,7 @@ def fn_easeInOutCubic(time):
     return cubic_bezier_at(time, 0, 0.045, 1, 1)
 
 
-# Quart
+# Ease - Quart
 def fn_easeInQuart(time):
     return cubic_bezier_at(time, 0, 0.03, 0.22, 1)
 
@@ -123,7 +124,7 @@ def fn_easeInOutQuart(time):
     return cubic_bezier_at(time, 0, 0, 1, 1),
 
 
-# Quint
+# Ease - Quint
 def fn_easeInQuint(time):
     return cubic_bezier_at(time, 0, 0.05, 0.06, 1)
 
@@ -136,7 +137,7 @@ def fn_easeInOutQuint(time):
     return cubic_bezier_at(time, 0, 0, 1, 1)
 
 
-# Expo
+# Ease - Expo
 def fn_easeInExpo(time):
     return cubic_bezier_at(time, 0, 0.05, 0.035, 1)
 
@@ -149,7 +150,7 @@ def fn_easeInOutExpo(time):
     return cubic_bezier_at(time, 0, 0, 1, 1)
 
 
-# Circ
+# Ease - Circ
 def fn_easeInCirc(time):
     return cubic_bezier_at(time, 0, 0.04, 0.335, 1)
 
@@ -162,7 +163,7 @@ def fn_easeInOutCirc(time):
     return cubic_bezier_at(time, 0, 0.135, 0.86, 1)
 
 
-# Back
+# Ease - Back
 def fn_easeInBack(time):
     return cubic_bezier_at(time, 0, -0.28, 0.045, 1)
 
@@ -175,7 +176,7 @@ def fn_easeInOutBack(time):
     return cubic_bezier_at(time, 0, -0.55, 1.55, 1)
 
 
-# Elastic
+# Ease - Elastic
 def fn_easeInElastic(time, period=0.3):
     """recieves 1 argument"""
     newT = 0
@@ -222,7 +223,7 @@ def fn_easeInOutElastic(time, period=0.3):
     return newT
 
 
-# Bounce
+# Ease - Bounce
 def bounce_time_old(time,bounces):
     ret = 0
     if time < 1 / 2.75:
@@ -287,7 +288,7 @@ def fn_easeInOutBounce(time, bounces=4):
 
     return newT
 
-
+#
 def parse_args(formula):
     # valid formula formats:
     #  - 'easeInSine'
