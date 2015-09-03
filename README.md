@@ -1,6 +1,5 @@
-# C= 64 tests
-In this repo I'll put my tests. Basically little programs that do little things.
+# C= 64 misc
 
-I'm using ca65 (from cc65) for all the tests. Download it from here:
+In this repo I'll put my misc sttuff, from little tools, to some little routines that I will use later.
 
-* http://cc65.github.io/cc65/
+Compile the routines with [cc65](http://cc65.github.io/cc65/)
