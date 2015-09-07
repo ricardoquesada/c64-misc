@@ -314,7 +314,7 @@ def print_list(l, absolute, last_value):
         if not absolute:
             new_item = item - last
             last = item
-            item = new_item%255
+            item = new_item%256
         if i % 8 == 0:
             sys.stdout.write('\n.byte %3d' % item)
         else:
