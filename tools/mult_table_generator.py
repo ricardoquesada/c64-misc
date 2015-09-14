@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # ----------------------------------------------------------------------------
-# Multiplying Table Generator
+# Multiplying Table Generator - riq
 # ----------------------------------------------------------------------------
 '''
 Multiplying Table Generator
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     argv = sys.argv[1:]
     try:
-        opts, args = getopt.getopt(argv, "f:t:12", ["from=", "to=","one","two"])
+        opts, args = getopt.getopt(argv, "f:t:12", ["from=", "to=", "one", "two"])
         for opt, arg in opts:
             if opt in ("-f", "--from"):
                 ffrom = int(arg)
