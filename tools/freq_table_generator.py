@@ -45,7 +45,7 @@ def run(basefreq, octaves, steps, phi, debug):
             __sid_notes.append(sid_note)
 
     if debug:
-        notes = ['C', 'C$', 'D', 'D$', 'E', 'F', 'F$', 'G', 'G$', 'A', 'A$', 'B']
+        notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
         sys.stdout.write("Debug\n")
         for i in range(0, octaves * steps):
@@ -69,7 +69,7 @@ def run(basefreq, octaves, steps, phi, debug):
 
 def help():
     print("%s v0.1 - An utility to generate SID frequency tables" % os.path.basename(sys.argv[0]))
-    print("\nUsage: %s [options] phi" % os.path.basename(sys.argv[0]))
+    print("\nUsage: %s [options] pal|ntsc|paln|phi" % os.path.basename(sys.argv[0]))
     print("\t-b base_freq\t\t\tDefault=440")
     print("\t-o octaves\t\t\tDefault=8")
     print("\t-s steps_per_octave\t\tDefault=12")
@@ -79,6 +79,8 @@ def help():
     print("\t%s -o8 -s12 985248" % os.path.basename(sys.argv[0]))
     print("\t%s 1022727" % os.path.basename(sys.argv[0]))
     print("\t%s 1023440" % os.path.basename(sys.argv[0]))
+    print("\t%s pal" % os.path.basename(sys.argv[0]))
+    print("\t%s ntsc" % os.path.basename(sys.argv[0]))
     sys.exit(-1)
 
 
@@ -91,6 +93,11 @@ if __name__ == "__main__":
     phi = 985248
     basefreq = 440
     debug = False
+
+    d = {'pal': 985248,
+         'ntsc': 1022727,
+         'paln': 1023440
+        }
 
     argv = sys.argv[1:]
     try:
@@ -107,7 +114,10 @@ if __name__ == "__main__":
         if not len(args) == 1:
             help()
         else:
-            phi = int(args[0])
+            if args[0] in d:
+                phi = d[args[0]]
+            else:
+                phi = int(args[0])
     except getopt.GetoptError, e:
         print(e)
 
