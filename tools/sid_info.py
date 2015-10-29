@@ -14,6 +14,28 @@ import struct
 __docformat__ = 'restructuredtext'
 
 
+def analyze_sidtracker64(v1, buf):
+    # Sidtracker64 is v2 first 8 bytes
+    #   jmp 0x1826          ; 3 bytes
+    #   ldx #0x00           ; 2 bytes
+    #   jsr 0x17f8          ; 3 bytes...
+    #   ignore the first 6 bytes then until we get to the '0x17f8'
+    address = struct.unpack_from("<H", buf, 0x7e + 6)[0]
+
+    # In "17f8" we should have something like
+    #   lda 0x1874,x        ; 1874 - 4 is where all the shadow variables are
+    #   and 0x189f,x        ; 189f, 189f + 7 and 189f+14 are where the gates varaibles are
+    init_address = v1[3]
+    diff = address - init_address
+    addresses = struct.unpack_from("<xHxH", buf, 0x7e + diff)
+    print("SidTracker64 info:")
+    print("  Shadow variables: $%04x - $%04x" % (addresses[0] - 4, addresses[0] + 19))
+    print("  Gate variables: $%04x, $%04x, $%04x" % (addresses[1], addresses[1] + 7, addresses[1] + 14))
+
+    freq_offset = len(buf) - 0x7e - 215
+    print("  Freq. PAL table lo/hi: $%04x / $%04x" % (v1[3] + freq_offset, v1[3] + freq_offset + 96))
+
+
 def print_header(header, v1, flags, addr):
     print("Header: %s, Version: %d (Offset: $%04x)" % (header, v1[0], v1[1]))
     print("Load Address: $%04x ($%04x)" % (v1[2], addr))
@@ -59,7 +81,6 @@ def print_header(header, v1, flags, addr):
             str_flags += ', 6581 & 8580'
 
         print("Flags: %s" % str_flags)
-    print()
 
     
 def run(sid_file):
@@ -79,10 +100,14 @@ def run(sid_file):
             addr = struct.unpack_from("<H", buf, 0x7c)[0]
 
         print_header(header, v1, flags, addr)
+
+        if 'SidTracker64' in v1[9]:
+            analyze_sidtracker64(v1, buf)
     else:
         print("%s - Not a valid SID file" % sid_file)
 
     f.close()
+    print("\n")
 
 
 def help():
