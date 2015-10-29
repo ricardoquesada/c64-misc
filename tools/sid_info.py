@@ -43,9 +43,9 @@ def print_header(header, v1, flags, addr):
     print("Play Address: $%04x" % v1[4])
     print("Songs: %d / Start Song: %d" % (v1[5], v1[6]))
     print("Speed: %s" % format(v1[7], '#032b'))
-    print("Title: %s" % v1[8].decode('utf8', 'ignore'))
-    print("Author: %s" % v1[9].decode('utf8', 'ignore'))
-    print("Released: %s" % v1[10].decode('utf8', 'ignore'))
+    print("Title: %s" % v1[8].decode('utf8', 'ignore').rstrip('\x00'))
+    print("Author: %s" % v1[9].decode('utf8', 'ignore').rstrip('\x00'))
+    print("Released: %s" % v1[10].decode('utf8', 'ignore').rstrip('\x00'))
 
     if flags is not None:
         str_flags = ''
@@ -101,7 +101,7 @@ def run(sid_file):
 
         print_header(header, v1, flags, addr)
 
-        if 'SidTracker64' in v1[9]:
+        if 'SidTracker64' in v1[9].decode('utf8','ignore'):
             analyze_sidtracker64(v1, buf)
     else:
         print("%s - Not a valid SID file" % sid_file)
