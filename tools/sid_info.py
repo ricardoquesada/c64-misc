@@ -15,7 +15,7 @@ __docformat__ = 'restructuredtext'
 
 
 def analyze_sidtracker64(v1, buf):
-    # Sidtracker64 is v2 first 8 bytes
+    # Sidtracker64 v2 first 8 bytes
     #   jmp 0x1826          ; 3 bytes
     #   ldx #0x00           ; 2 bytes
     #   jsr 0x17f8          ; 3 bytes...
@@ -34,6 +34,27 @@ def analyze_sidtracker64(v1, buf):
 
     freq_offset = len(buf) - 0x7e - 215
     print("  Freq. PAL table lo/hi: $%04x / $%04x" % (v1[3] + freq_offset, v1[3] + freq_offset + 96))
+
+    # [$1001]
+    real_init_address = struct.unpack_from("<H", buf, 0x7e + 1)
+
+    # [$1001 will something like this: we only care about bytes 1 and 3
+    # lda #0x73         ; 2 bytes
+    # ldx #0x89         ; 2 bytes
+    # sta 0xdc04        ; 3 bytes
+    # stx 0xdc05        ; 3 bytes
+
+    real_init_address = struct.unpack_from("<H", buf, 0x7e + 1)[0]
+    freq = struct.unpack_from("<xBxB", buf, 0x7e + real_init_address - 0x1000)
+    pal_freq = freq[0] + freq[1] * 256
+    ntsc_freq = pal_freq * 1022727 / 985248
+    paln_freq = pal_freq * 1023440 / 985248
+    freq_hz =  985248 / pal_freq
+
+    print("  Play Frequency: ~%dhz" % freq_hz)
+    print("  CIA Timer PAL: $%04x" % pal_freq)
+    print("  CIA Timer NTSC: $%04x" % ntsc_freq)
+    print("  CIA Timer PAL-N: $%04x" % paln_freq)
 
 
 def print_header(header, v1, flags, addr):
