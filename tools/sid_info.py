@@ -47,8 +47,8 @@ def analyze_sidtracker64(v1, buf):
     real_init_address = struct.unpack_from("<H", buf, 0x7e + 1)[0]
     freq = struct.unpack_from("<xBxB", buf, 0x7e + real_init_address - 0x1000)
     pal_freq = freq[0] + freq[1] * 256
-    ntsc_freq = pal_freq * 1022727 / 985248
-    paln_freq = pal_freq * 1023440 / 985248
+    ntsc_freq = ((pal_freq+1) * 1022727 / 985248) - 1
+    paln_freq = ((pal_freq+1) * 1023440 / 985248) - 1
     freq_hz =  985248 / pal_freq
 
     print("  Play Frequency: ~%dhz" % freq_hz)
