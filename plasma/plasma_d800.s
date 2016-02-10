@@ -1,0 +1,233 @@
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+;
+; Simple plasma, based on the cc65 samples/plasma.c example
+;
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+
+; Use 1 to enable raster lines
+DEBUG = 1
+
+.segment "CODE"
+
+        jsr clear_screen                ; clear screen
+
+        lda #0
+        sta $d020                       ; border color
+        lda #0
+        sta $d021                       ; background color
+
+        lda #%00001000                  ; no scroll, hires (mono color),40-cols
+        sta $d016
+
+        sei
+
+        lda #$7f                        ; turn off cia interrups
+        sta $dc0d
+        sta $dd0d
+
+        lda #01                         ; enable raster irq
+        sta $d01a
+
+        ldx #<irq                       ; setup IRQ vector
+        ldy #>irq
+        stx $314
+        sty $315
+
+        lda $dc0d                       ; ack possible interrupts
+        lda $dd0d
+        asl $d019
+
+        cli
+
+main_loop:
+        lda sync
+        beq main_loop
+        dec sync
+
+.if DEBUG=1
+        inc $d020
+.endif
+        jsr do_plasma
+.if DEBUG=1
+        dec $d020
+.endif
+        jmp main_loop
+
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+; irq vector
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+irq:
+        asl $d019
+
+        inc sync
+
+        jmp $ea81
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+; clear_screen
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.proc clear_screen
+        lda #$a0
+        ldx #$00
+loop1:  sta $0400,x                     ; clears the screen memory
+        sta $0500,x
+        sta $0600,x
+        sta $06e8,x
+        inx
+        bne loop1
+
+        lda #01
+        ldx #$00
+loop2:  sta $d800,x                    ; clears the color RAM
+        sta $d900,x
+        sta $da00,x
+        sta $dae8,x
+        inx
+        bne loop2
+        rts
+.endproc
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+; do_plasma
+; animates the plasma
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.proc do_plasma
+        ldx x_idx_a
+        ldy y_idx_a
+        .repeat 13, YY
+                lda sine_table, x
+                adc sine_table, y
+                sta y_buf + YY
+                txa
+                adc #5
+                tax
+                tya
+                adc #3
+                tay
+        .endrepeat
+
+        inc x_idx_a
+        inc x_idx_a
+        inc x_idx_a
+        dec y_idx_a
+        dec y_idx_a
+        dec y_idx_a
+        dec y_idx_a
+
+        ;----------
+
+        ldx x_idx_b
+        ldy y_idx_b
+
+        .repeat 40, XX
+                lda sine_table, x
+                adc sine_table, y
+                sta x_buf + XX
+                txa
+                adc #4
+                tax
+                tya
+                adc #7
+                tay
+        .endrepeat
+
+        inc x_idx_b
+        inc x_idx_b
+        dec y_idx_b
+        dec y_idx_b
+        dec y_idx_b
+
+        .repeat 13, YY
+        .repeat 40, XX
+                lda x_buf + XX
+                adc y_buf + YY
+                tax
+                lda luminances, x
+                sta $d800 + YY * 40 + XX
+                sta $d800 + (24-YY) * 40 + XX
+        .endrepeat
+        .endrepeat
+
+        rts
+
+x_idx_a:
+        .byte 0
+y_idx_a:
+        .byte 0
+x_idx_b:
+        .byte 0
+y_idx_b:
+        .byte 0
+.endproc
+
+
+
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+; global variables
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.DATA
+sync:
+        .byte 0
+
+luminances:
+.byte $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01
+.byte $0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d,$0d
+.byte $07,$07,$07,$07,$07,$07,$07,$07,$07,$07,$07,$07,$07,$07,$07,$07
+.byte $03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03
+.byte $0f,$0f,$0f,$0f,$0f,$0f,$0f,$0f,$0f,$0f,$0f,$0f,$0f,$0f,$0f,$0f
+.byte $05,$05,$05,$05,$05,$05,$05,$05,$05,$05,$05,$05,$05,$05,$05,$05
+.byte $0a,$0a,$0a,$0a,$0a,$0a,$0a,$0a,$0a,$0a,$0a,$0a,$0a,$0a,$0a,$0a
+.byte $0e,$0e,$0e,$0e,$0e,$0e,$0e,$0e,$0e,$0e,$0e,$0e,$0e,$0e,$0e,$0e
+.byte $0c,$0c,$0c,$0c,$0c,$0c,$0c,$0c,$0c,$0c,$0c,$0c,$0c,$0c,$0c,$0c
+.byte $08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08
+.byte $04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04
+.byte $02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02
+.byte $0b,$0b,$0b,$0b,$0b,$0b,$0b,$0b,$0b,$0b,$0b,$0b,$0b,$0b,$0b,$0b
+.byte $09,$09,$09,$09,$09,$09,$09,$09,$09,$09,$09,$09,$09,$09,$09,$09
+.byte $06,$06,$06,$06,$06,$06,$06,$06,$06,$06,$06,$06,$06,$06,$06,$06
+.byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+
+sine_table:
+; autogenerated table: easing_table_generator.py -s256 -m255 -aTrue -f1 sin
+.byte   3,  6,  9, 13, 16, 19, 22, 25
+.byte  28, 31, 34, 37, 41, 44, 47, 50
+.byte  53, 56, 59, 62, 65, 68, 71, 74
+.byte  77, 80, 83, 86, 89, 92, 95, 98
+.byte 100,103,106,109,112,115,117,120
+.byte 123,126,128,131,134,136,139,142
+.byte 144,147,149,152,154,157,159,162
+.byte 164,167,169,171,174,176,178,180
+.byte 183,185,187,189,191,193,195,197
+.byte 199,201,203,205,207,208,210,212
+.byte 214,215,217,219,220,222,223,225
+.byte 226,228,229,231,232,233,234,236
+.byte 237,238,239,240,241,242,243,244
+.byte 245,246,247,247,248,249,249,250
+.byte 251,251,252,252,253,253,253,254
+.byte 254,254,255,255,255,255,255,255
+.byte 255,255,255,255,255,254,254,254
+.byte 253,253,253,252,252,251,251,250
+.byte 249,249,248,247,247,246,245,244
+.byte 243,242,241,240,239,238,237,236
+.byte 234,233,232,231,229,228,226,225
+.byte 223,222,220,219,217,215,214,212
+.byte 210,208,207,205,203,201,199,197
+.byte 195,193,191,189,187,185,183,180
+.byte 178,176,174,171,169,167,164,162
+.byte 159,157,154,152,149,147,144,142
+.byte 139,136,134,131,128,126,123,120
+.byte 117,115,112,109,106,103,100, 98
+.byte  95, 92, 89, 86, 83, 80, 77, 74
+.byte  71, 68, 65, 62, 59, 56, 53, 50
+.byte  47, 44, 41, 37, 34, 31, 28, 25
+.byte  22, 19, 16, 13,  9,  6,  3,  0
+
+.BSS
+
+x_buf:
+.res 40
+y_buf:
+.res 25
+
