@@ -19,39 +19,39 @@ sprite-1x2-scroller: sprite-1x2-scroller.s
 	$(X64) -moncommands $@.sym $@.prg
 
 8x16-scroller: 8x16-scroller.s
-	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg $^
+	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C sid-charset.cfg $^
 	$(X64) -moncommands $@.sym $@.prg
 
 8x8-scroller: 8x8-scroller.s
-	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg $^
+	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C sid-charset.cfg $^
 	$(X64) -moncommands $@.sym $@.prg
 
 8x8-double-scroller: 8x8-double-scroller.s
-	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg $^
+	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C sid-charset.cfg $^
 	$(X64) -moncommands $@.sym $@.prg
 
 1x1-scroller: 1x1-scroller.s
-	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg $^
+	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C sid-charset.cfg $^
 	$(X64) -moncommands $@.sym $@.prg
 
 2x1-scroller: 2x1-scroller.s
-	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg $^
+	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C sid-charset.cfg $^
 	$(X64) -moncommands $@.sym $@.prg
 
 1x2-scroller: 1x2-scroller.s
-	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg $^
+	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C sid-charset.cfg $^
 	$(X64) -moncommands $@.sym $@.prg
 
 2x2-scroller: 2x2-scroller.s
-	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg $^
+	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C sid-charset.cfg $^
 	$(X64) -moncommands $@.sym $@.prg
 
 2x2-scroller-multi: 2x2-scroller-multi.s
-	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg $^
+	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C sid-charset.cfg $^
 	$(X64) -moncommands $@.sym $@.prg
 
 2x2-scroller-multi-with-rasterbars: 2x2-scroller-multi-with-rasterbars.s
-	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg $^
+	cl65 -o $@.prg -u __EXEHDR__ -t c64 -C sid-charset.cfg $^
 	$(X64) -moncommands $@.sym $@.prg
 
 clean:
