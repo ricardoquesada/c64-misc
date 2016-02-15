@@ -304,7 +304,8 @@ sync_raster:            .byte 0         ; used to sync raster
 ; starts with an empty (white) palette
 
 scroll_text:
-        scrcode " probando scroll en diagonal usando bitmap... la pendiente de la diagonal es muy simple... otro tipo de pendiente puede llevar mucho mas poder de computo..."
+        scrcode " Probando scroll en diagonal en bitmap... la pendiente de la diagonal es 8x1."
+        scrcode " Otro tipo de pendiente puede llevar mucho mas poder de computo ya que no podria usar 'rol' y tendria que usar algo mas especifico...    "
         .byte 96,97
         .byte 96,97
         .byte 96,97
