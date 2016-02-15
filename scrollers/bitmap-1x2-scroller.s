@@ -1,12 +1,11 @@
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-; Scroller using 8 sprites
+; Scroller using bitmap
 ; 
 ; Compile using:
-;    cl65 -o sprite-1x2-scroller.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg sprite-1x2-scroller.s
+;    cl65 -o bitmap-1x2-scroller.prg -u __EXEHDR__ -t c64 -C c64-asm.cfg bitmap-1x2-scroller.s
 ;       
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 
-SPRITE_ADDR = $2000
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ; Macros
@@ -20,6 +19,8 @@ SPRITE_ADDR = $2000
 
 DEBUG = 1                               ; rasterlines:1, music:2, all:3
 
+BITMAP_ADDR = $2000 + 8 * 40 * 12
+
 
 .segment "CODE"
         sei
@@ -28,16 +29,21 @@ DEBUG = 1                               ; rasterlines:1, music:2, all:3
         sta $01
 
         jsr clear_screen                ; clear screen
+        jsr init_bitmap
 
         lda #0
         sta $d020                       ; border color
         lda #0
         sta $d021                       ; background color
 
-        jsr init_sprites
-
-        lda #%00001000                  ; no scroll, hires (mono color),40-cols
+        lda #%00001000                  ; no scroll, hires (mono color), 40-cols
         sta $d016
+        
+        lda #%00111011                  ; bitmap mode, default scroll-Y position, 25-rows
+        sta $d011
+
+        lda #%00011100                  ; bitmap addr: $2000, charset $1800 (not-used), video RAM: $0400
+        sta $d018
 
         lda #$7f                        ; turn off cia interrups
         sta $dc0d
@@ -51,8 +57,6 @@ DEBUG = 1                               ; rasterlines:1, music:2, all:3
         stx $fffe
         sty $ffff
 
-        lda #%00011011                  ; set char mode
-        sta $d011
         
         lda #$50
         sta $d012
@@ -132,8 +136,8 @@ next:
 
 
         ; scroll top 8 bytes
-        ; YY = sprite rows
-        ; SS = sprite number
+        ; YY = char rows
+        ; SS = bitmap cols
         .repeat 8, YY
                 lda ($fc),y
                 ldx bit_idx             ; set C according to the current bit index
@@ -141,11 +145,9 @@ next:
                 dex
                 bpl :-
 
-        .repeat 8, SS
-                rol SPRITE_ADDR + (7 - SS) * 64 + YY * 3 + 2
-                rol SPRITE_ADDR + (7 - SS) * 64 + YY * 3 + 1
-                rol SPRITE_ADDR + (7 - SS) * 64 + YY * 3 + 0
-        .endrepeat
+                .repeat 40, SS
+                        rol BITMAP_ADDR + (39 - SS) * 8 + YY
+                .endrepeat
                 iny                     ; byte of the char
         .endrepeat
 
@@ -162,8 +164,8 @@ next:
         ldy $fb                         ; restore Y from tmp variable
 
         ; scroll middle 8 bytes
-        ; YY = sprite rows
-        ; SS = sprite number
+        ; YY = char rows
+        ; SS = bitmap cols
         .repeat 8, YY
                 lda ($fc),y
                 ldx bit_idx             ; set C according to the current bit index
@@ -171,11 +173,9 @@ next:
                 dex
                 bpl :-
 
-        .repeat 8, SS
-                rol SPRITE_ADDR + (7 - SS) * 64 + YY * 3 + 24 + 2
-                rol SPRITE_ADDR + (7 - SS) * 64 + YY * 3 + 24 + 1
-                rol SPRITE_ADDR + (7 - SS) * 64 + YY * 3 + 24 + 0
-        .endrepeat
+                .repeat 40, SS
+                        rol BITMAP_ADDR + 40 * 8 + (39 - SS) * 8 + YY
+                .endrepeat
                 iny                     ; byte of the char
         .endrepeat
 
@@ -202,49 +202,46 @@ bit_idx:
 .endproc
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-; init_sprites 
+; init_bitmap
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.proc init_sprites
-        lda #255; enable all sprites
-        sta VIC_SPR_ENA
+.proc init_bitmap
 
-        lda #0
-        sta $d010                       ; no 8-bit on for sprites x
-        sta $d017                       ; no y double resolution
-        sta $d01d                       ; no x double resolution
-        sta $d01c                       ; no sprite multi-color. hi-res only
-
-
-        ldx #7
-        ldy #14
-l1:
-        lda sprite_x_pos,x
-        sta VIC_SPR0_X,y
-        lda #128
-        sta VIC_SPR0_Y,y
-        lda #1                          ; white color
-        sta VIC_SPR0_COLOR,x            ; all sprites are white
-        lda sprite_pointers,x
-        sta $07f8,x                     ; sprite pointers
-        dey
-        dey
-        dex
-        bpl l1
-
-        lda #0                          ; all sprites are clean
+        lda #$00
         tax
-l2:     sta SPRITE_ADDR,x               ; 8 sprites = 512 bytes = 64 * 8
-        sta SPRITE_ADDR+$100,x
+       
+l0:
+        .repeat 32,II                   ; clear bitmap memory
+        sta $2000 + 256 * II,x
+        .endrepeat
         dex
-        bne l2
+        bne l0
 
+
+        lda #%00010000                  ; white foreground, black background
+l1:
+        sta $400,x
+        sta $500,x
+        sta $600,x
+        sta $6e8,x
+        dex
+        bne l1
+        
         rts
-sprite_x_pos:
-.byte 183-24*4, 183-24*3, 183-24*2, 183-24*1
-.byte 183+24*0, 183+24*1, 183+24*2, 183+24*3
-sprite_pointers:
-        .byte (SPRITE_ADDR/64)+0, (SPRITE_ADDR/64)+1, (SPRITE_ADDR/64)+2, (SPRITE_ADDR/64)+3
-        .byte (SPRITE_ADDR/64)+4, (SPRITE_ADDR/64)+5, (SPRITE_ADDR/64)+6, (SPRITE_ADDR/64)+7
+.endproc
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+; clear_screen
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.proc clear_screen
+        lda #01
+        ldx #$00
+loop2:  sta $d800,x                    ; clears the color RAM
+        sta $d900,x
+        sta $da00,x
+        sta $dae8,x
+        inx
+        bne loop2
+        rts
 .endproc
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
@@ -271,29 +268,6 @@ sprite_pointers:
 .endproc
 
 
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-; clear_screen
-;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.proc clear_screen
-        lda #$20
-        ldx #$00
-loop1:  sta $0400,x                     ; clears the screen memory
-        sta $0500,x
-        sta $0600,x
-        sta $06e8,x
-        inx
-        bne loop1
-
-        lda #01
-        ldx #$00
-loop2:  sta $d800,x                    ; clears the color RAM
-        sta $d900,x
-        sta $da00,x
-        sta $dae8,x
-        inx
-        bne loop2
-        rts
-.endproc
 
 
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
@@ -305,7 +279,7 @@ sync_raster:            .byte 0         ; used to sync raster
 ; starts with an empty (white) palette
 
 scroll_text:
-        scrcode "...Hola amiguitos... como les va che... probando scroll con sprites... nada del otro mundo aca... "
+        scrcode "...Hola amiguitos... como les va che... probando scroll con bitmap... nada del otro mundo aca, solo un scroll simple... es modo bitmap hi-res. "
         .byte 96,97
         .byte 96,97
         .byte 96,97
