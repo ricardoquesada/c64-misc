@@ -231,8 +231,8 @@ bit_idx_bottom:
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .proc init_bitmap
 
-        lda #$00
-        tax
+        lda #%10101010
+        ldx #$00
 
 l0:
         .repeat 32,II                   ; clear bitmap memory
