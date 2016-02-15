@@ -109,8 +109,10 @@ load_scroll_addr = * + 1
         lda scroll_text                 ; self-modifying
         cmp #$ff
         bne next
+        ldx #1
+        stx bit_idx_top
         ldx #0
-        stx bit_idx
+        stx bit_idx_bottom
         ldx #<scroll_text
         ldy #>scroll_text
         stx load_scroll_addr
@@ -140,7 +142,7 @@ next:
         ; SS = bitmap cols
         .repeat 8, YY
                 lda ($fc),y
-                ldx bit_idx             ; set C according to the current bit index
+                ldx bit_idx_top         ; set C according to the current bit index
 :               asl
                 dex
                 bpl :-
@@ -161,6 +163,18 @@ next:
         adc #04                         ; the same thing as adding 1024
         sta $fd
 
+        lda bit_idx_bottom              ; if bit_idx_bottom == 0, then char + 1
+        cmp #$07
+        bne :+
+        cld
+        lda $fc
+        adc #$01
+        sta $fc
+        lda $fd
+        adc #$00
+        sta $fd
+
+:
         ldy $fb                         ; restore Y from tmp variable
 
         ; scroll middle 8 bytes
@@ -168,7 +182,7 @@ next:
         ; SS = bitmap cols
         .repeat 8, YY
                 lda ($fc),y
-                ldx bit_idx             ; set C according to the current bit index
+                ldx bit_idx_bottom      ; set C according to the current bit index
 :               asl
                 dex
                 bpl :-
@@ -180,7 +194,7 @@ next:
         .endrepeat
 
 
-        ldx bit_idx
+        ldx bit_idx_top                 ; bit idx top
         inx
         cpx #8
         bne l1
@@ -193,11 +207,22 @@ next:
         bcc l1
         inc load_scroll_addr+1
 l1:
-        stx bit_idx
+        stx bit_idx_top
+
+
+        dex                             ; bit_idx_bottom = bit_idx_top - 1
+        cpx #$ff
+        bne l2
+
+        ldx #7
+l2:
+        stx bit_idx_bottom
 
         rts
 
-bit_idx:
+bit_idx_top:
+        .byte 1                         ; points to the bit displayed
+bit_idx_bottom:
         .byte 0                         ; points to the bit displayed
 .endproc
 
@@ -208,7 +233,7 @@ bit_idx:
 
         lda #$00
         tax
-       
+
 l0:
         .repeat 32,II                   ; clear bitmap memory
         sta $2000 + 256 * II,x
@@ -225,7 +250,7 @@ l1:
         sta $6e8,x
         dex
         bne l1
-        
+
         rts
 .endproc
 
@@ -279,10 +304,11 @@ sync_raster:            .byte 0         ; used to sync raster
 ; starts with an empty (white) palette
 
 scroll_text:
-        scrcode "probando scroll en diagonal usando bitmap... la pendiente de la diagonal es muy simple... otro tipo de pendiente puede llevar mucho mas poder de computo..."
+        scrcode " probando scroll en diagonal usando bitmap... la pendiente de la diagonal es muy simple... otro tipo de pendiente puede llevar mucho mas poder de computo..."
         .byte 96,97
         .byte 96,97
         .byte 96,97
+        scrcode "  "
         .byte $ff
 
 
