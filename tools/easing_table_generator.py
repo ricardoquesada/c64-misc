@@ -375,14 +375,14 @@ def help():
     print("\t-m maxvalue\t\t\tmax value for the table. Default=128")
     print("\t-r\t\t\t\twill also generate the reversed table. Default: no reverse table")
     print("\t-a true|false\t\t\tabsolute or relative output. Default: true")
-    print("\t-f\t\t\t\tlist available formulas")
+    print("\t-l\t\t\t\tlist available formulas")
     print("\tformula_name[:args]\t\toptinal arguments can be passed by appending ':'")
     print("\nExamples:")
     print("\t%s -s256 easeInSine" % os.path.basename(sys.argv[0]))
     print("\t%s -s128 -m40 -r -atrue easeInOutCubic" % os.path.basename(sys.argv[0]))
     print("\t%s -m40 -r  -afalse bezier:0,0.2,0.8,1" % os.path.basename(sys.argv[0]))
     print("\t%s easeInElastic:0.3" % os.path.basename(sys.argv[0]))
-    print("\t%s -f" % os.path.basename(sys.argv[0]))
+    print("\t%s -l" % os.path.basename(sys.argv[0]))
     sys.exit(-1)
 
 
