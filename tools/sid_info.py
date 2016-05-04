@@ -51,7 +51,7 @@ def analyze_sidtracker64(v1, buf):
     paln_freq = ((pal_freq+1) * 1023440 / 985248) - 1
     freq_hz =  985248 / pal_freq
 
-    print("  Play Frequency: ~%dhz" % freq_hz)
+    print("  Play Frequency: ~%.2fhz" % freq_hz)
     print("  CIA Timer PAL: $%04x" % pal_freq)
     print("  CIA Timer NTSC: $%04x" % ntsc_freq)
     print("  CIA Timer PAL-N: $%04x" % paln_freq)
