@@ -66,7 +66,9 @@ def run(drive, directory):
     subprocess.call(['c1541','-format', title, fmt, imaged82])
     for name in files:
         print("Copying %s" % name)
-        subprocess.call(['cbmread', '-q', drive, name, '-o', name])
+        # can't read files that contians the: '(.)'
+        name_fixed = name.replace("(.)", "(?)")
+        subprocess.call(['cbmread', '-q', drive, name_fixed, '-o', name])
         # cbmread will write replace '/' with '_' when creating files
         name_fixed = name.replace('/','_')
         subprocess.call(['c1541', imaged82, '-write', name_fixed, name])
