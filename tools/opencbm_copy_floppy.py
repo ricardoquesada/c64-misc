@@ -18,8 +18,8 @@ __docformat__ = 'restructuredtext'
 def parse_files(output):
     files = []
     lines = output.split('\n')
+    print(output)
     for line in lines[1:-2]:
-        print(line)
 #        r = re.match("\s*(\d*)\s*(\"\.*\")\s*prg\s*",line)
         r = re.match("\s*(\d*).*\"(.*)\".*(\w\w\w).*",line)
         if r is not None:
@@ -54,7 +54,7 @@ def run(drive, directory):
         print("Copying %s" % name)
         subprocess.call(['cbmread', drive, name, '-o', name])
         subprocess.call(['c1541', imaged64, '-write', name])
-    subprocess.call(['c1541','-list'])
+    subprocess.call(['c1541', imaged64, '-list'])
     os.chdir(cwd)
 
 def help():
