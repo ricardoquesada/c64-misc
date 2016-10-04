@@ -34,7 +34,17 @@ def parse_files(output):
             elif ext == "rel":
                 name = name + ",l"
             files.append(name)
-    return files
+    # title
+    r = re.match(".*\"(.*)\" (..).*",lines[0])
+    title = r.group(1) + "," + r.group(2)
+
+    # blocks free
+    r = re.match("\s*(\d*).*", lines[-2])
+    blocks_free = int(r.group(1))
+    fmt = 'd64'
+    if blocks_free < 6:
+        fmt = 'd71'
+    return title,files,fmt
 
 def run(drive, directory):
     if not os.path.exists(directory):
@@ -45,20 +55,22 @@ def run(drive, directory):
     p = subprocess.Popen(['cbmctrl', 'dir', drive], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, err = p.communicate(b"input data that is passed to subprocess' stdin")
     rc = p.returncode
-    files = parse_files(output)
+    title,files,fmt = parse_files(output)
     cwd = os.getcwd()
     os.chdir(directory)
-    imaged64 = directory + '.d64'
-    subprocess.call(['c1541','-format', directory+',82', 'd64', imaged64])
+    imaged82 = directory + '.' + fmt
+    subprocess.call(['c1541','-format', title, fmt, imaged82])
     for name in files:
         print("Copying %s" % name)
-        subprocess.call(['cbmread', drive, name, '-o', name])
-        subprocess.call(['c1541', imaged64, '-write', name])
-    subprocess.call(['c1541', imaged64, '-list'])
+        subprocess.call(['cbmread', '-q', drive, name, '-o', name])
+        # cbmread will write replace '/' with '_' when creating files
+        name_fixed = name.replace('/','_')
+        subprocess.call(['c1541', imaged82, '-write', name_fixed, name])
+    subprocess.call(['c1541', imaged82, '-list'])
     os.chdir(cwd)
 
 def help():
-    print("%s v0.1 - Utility to copy files using opencbm\n" % os.path.basename(sys.argv[0]))
+    print("%s v0.1 - Utility to copy CBM2040-formatted floppy disk to d64/d71\n" % os.path.basename(sys.argv[0]))
     print("Example:\n%s 8 directory_name" % os.path.basename(sys.argv[0]))
     sys.exit(-1)
 
