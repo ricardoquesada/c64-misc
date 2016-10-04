@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # ----------------------------------------------------------------------------
-# copy files usinb opencbm
+# copy CBM2040 formatted disks to d64 images
 # ----------------------------------------------------------------------------
 '''
 Little tool to display SID info
@@ -14,6 +14,7 @@ import re
 
 
 __docformat__ = 'restructuredtext'
+
 
 def parse_files(output):
     files = []
@@ -42,9 +43,12 @@ def parse_files(output):
     r = re.match("\s*(\d*).*", lines[-2])
     blocks_free = int(r.group(1))
     fmt = 'd64'
-    if blocks_free < 6:
+    # it seems that 2040-formatted disks have 6 more blocks than d64
+    # use d71 when needed
+    if blocks_free <= 6:
         fmt = 'd71'
     return title,files,fmt
+
 
 def run(drive, directory):
     if not os.path.exists(directory):
@@ -69,8 +73,9 @@ def run(drive, directory):
     subprocess.call(['c1541', imaged82, '-list'])
     os.chdir(cwd)
 
+
 def help():
-    print("%s v0.1 - Utility to copy CBM2040-formatted floppy disk to d64/d71\n" % os.path.basename(sys.argv[0]))
+    print("%s v0.1 - Utility to copy CBM2040-formatted floppy disk to d64/d71 images\n" % os.path.basename(sys.argv[0]))
     print("Example:\n%s 8 directory_name" % os.path.basename(sys.argv[0]))
     sys.exit(-1)
 
