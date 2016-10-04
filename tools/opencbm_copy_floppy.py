@@ -21,14 +21,26 @@ def parse_files(output):
     for line in lines[1:-2]:
         print(line)
 #        r = re.match("\s*(\d*)\s*(\"\.*\")\s*prg\s*",line)
-        r = re.match("\s*(\d*).*\"(.*)\".*prg.*",line)
+        r = re.match("\s*(\d*).*\"(.*)\".*(\w\w\w).*",line)
         if r is not None:
-            files.append(r.group(2))
+            name = r.group(2)
+            ext = r.group(3)
+            if ext == "seq":
+                name = name + ",s"
+            elif ext == "del":
+                name = name + ",d"
+            elif ext == "usr":
+                name = name + ",u"
+            elif ext == "rel":
+                name = name + ",l"
+            files.append(name)
     return files
 
 def run(drive, directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+    subprocess.call(['cbmctrl','reset'])
 
     p = subprocess.Popen(['cbmctrl', 'dir', drive], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, err = p.communicate(b"input data that is passed to subprocess' stdin")
@@ -36,9 +48,13 @@ def run(drive, directory):
     files = parse_files(output)
     cwd = os.getcwd()
     os.chdir(directory)
-    for f in files:
-        print("Copying %s" % f)
-        subprocess.call(['cbmread', drive, f, '-o', f])
+    imaged64 = directory + '.d64'
+    subprocess.call(['c1541','-format', directory+',82', 'd64', imaged64])
+    for name in files:
+        print("Copying %s" % name)
+        subprocess.call(['cbmread', drive, name, '-o', name])
+        subprocess.call(['c1541', imaged64, '-write', name])
+    subprocess.call(['c1541','-list'])
     os.chdir(cwd)
 
 def help():
