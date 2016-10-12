@@ -21,6 +21,9 @@ fadeout:
 	cl65 -d -g -Ln fadeout.sym -u __EXEHDR__ -t c64 -o fadeout.prg -C c64-asm.cfg fadeout.s
 	$(X64) -moncommands fadeout.sym fadeout.prg
 
+pet_ram_check:
+	cl65 -d -g -Ln pet_ram_check.sym -t pet -o pet_ram_check.prg -C pet_ram_check.cfg pet_ram_check.s
+
 clean:
 	rm -f *.o *.prg *.sym
 
