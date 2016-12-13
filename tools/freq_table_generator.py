@@ -73,7 +73,6 @@ def help():
     print("\t-b base_freq\t\t\tDefault=440")
     print("\t-o octaves\t\t\tDefault=8")
     print("\t-s steps_per_octave\t\tDefault=12")
-    print("\t-f only prints pure frequency values. Not SID notes")
     print("\nUse a phi of 985248 for PAL, 1022727 for NTSC and 1023440 for PAL-N (Drean)")
     print("\nExamples:")
     print("\t%s -o8 -s12 985248" % os.path.basename(sys.argv[0]))
