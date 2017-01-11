@@ -24,6 +24,10 @@ fadeout:
 pet_ram_check:
 	cl65 -d -g -Ln pet_ram_check.sym -t pet -o pet_ram_check.prg -C pet_ram_check.cfg pet_ram_check.s
 
+nmi:
+	cl65 -d -g -Ln nmi.sym -u __EXEHDR__ -t c64 -o nmi.prg -C c64-asm.cfg nmi_interrupt.s
+	$(X64) -moncommands nmi.sym nmi.prg
+
 clean:
 	rm -f *.o *.prg *.sym
 
