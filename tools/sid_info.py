@@ -103,7 +103,55 @@ def print_header(header, v1, flags, addr):
 
         print("Flags: %s" % str_flags)
 
-    
+def print_freq_tables(v1, load_addr, buf):
+    offset = v1[1]
+
+    array = buf[offset+2:-1]
+
+    lo_freqs = [
+            b'\x16\x27\x38\x4b\x5f',    # PAL
+            b'\x16\x27\x38\x4b\x5e',    # PAL
+            b'\x16\x27\x39\x4b\x5f',    # PAL
+            b'\x17\x27\x39\x4b\x5f',    # PAL
+
+            b'\x0c\x1c\x2d\x3e\x51',    # NTSC
+            b'\x0c\x1c\x2d\x3f\x52',    # NTSC
+            b'\x0c\x1c\x2d\x3e\x47',    # NTSC
+           ]
+
+    hi_freqs = [
+            # with 12 '01's
+            b'\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x02\x02',    # PAL
+            # with 11 '01's
+            b'\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x02\x02\x02',
+           ]
+
+
+    f_lo = None
+    f_hi = None
+    f_type = 'PAL'
+
+    # try to find lo freq table
+    for i,lo in enumerate(lo_freqs):
+        found = array.find(lo)
+        if found != -1:
+            f_lo = found
+            if i >= 4:
+                f_type = 'NTSC'
+            break
+
+    for hi in hi_freqs:
+        found = array.find(hi)
+        if found != -1:
+            f_hi = found
+            break
+
+    if f_lo and f_hi:
+        print("Freq table addr (lo/hi): $%04x / $%04x (%s)" % (load_addr + f_lo, load_addr + f_hi, f_type))
+    else:
+        print("Freq table addr: not found")
+
+
 def run(sid_file):
     f = open(sid_file)
     buf = f.read()
@@ -121,6 +169,7 @@ def run(sid_file):
             addr = struct.unpack_from("<H", buf, 0x7c)[0]
 
         print_header(header, v1, flags, addr)
+        print_freq_tables(v1, addr, buf)
 
         if 'SidTracker64' in v1[9].decode('utf8','ignore'):
             analyze_sidtracker64(v1, buf)
