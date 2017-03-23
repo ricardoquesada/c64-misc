@@ -13,8 +13,9 @@ DEBUG = 1
 
         jsr clear_screen                ; clear screen
 
-        lda #0
+        lda #14
         sta $d020                       ; border color
+        lda #0
         sta $d021                       ; background color
 
         lda #2
@@ -79,15 +80,7 @@ main_loop:
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .proc clear_screen
 
-        ldx #0                          ; clear charset: $2000 - $2800
-        lda #$00
-@l0:
-        .repeat 8, XX
-                sta $2000 + $0100 * XX, x
-        .endrepeat
-
-        dex
-        bne @l0
+        jsr clear_charset
 
         ldx #0
         lda #$ff
@@ -108,7 +101,7 @@ main_loop:
         .endrepeat
 
         ldx #0                          ; color #3: bitmask 11
-        lda #$04
+        lda #14
 @l2:    sta $d800, x
         sta $d900, x
         sta $da00, x
@@ -130,6 +123,29 @@ ident_array:
 ;
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 .segment "HI_CODE"
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+; clear_charset
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.proc clear_charset
+        lda #$00
+        .repeat 16, CC
+                .repeat 8, AA
+                        .repeat 8, BB
+                                sta $2000 + 128 * CC + 16 * AA + BB
+                        .endrepeat
+                        eor #$ff
+                        .repeat 8, BB
+                                sta $2000 + 128 * CC + 16 * AA + BB + 8
+                        .endrepeat
+                        eor #$ff
+                .endrepeat
+                eor #$ff
+        .endrepeat
+
+        rts
+.endproc
+
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ; do_plotter
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
