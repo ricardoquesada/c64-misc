@@ -1,7 +1,7 @@
 .SILENT:
 
 X64 = x64
-all: plotter_bitmap_mc plotter_charset_mc
+all: plotter_bitmap_mc plotter_charset_mc plotter_charset_mc2
 
 plotter_bitmap_mc:
 	cl65 -d -g -Ln plotter_bitmap_mc.sym -u __EXEHDR__ -t c64 -o plotter_bitmap_mc.prg -C c64-asm.cfg plotter_bitmap_mc.s
