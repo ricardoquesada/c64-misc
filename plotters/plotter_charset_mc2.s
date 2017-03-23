@@ -17,6 +17,11 @@ DEBUG = 1
         sta $d020                       ; border color
         sta $d021                       ; background color
 
+        lda #2
+        sta $d022
+        lda #3
+        sta $d023
+
         lda #%00011011                  ; text on
         sta $d011
 
@@ -59,8 +64,8 @@ main_loop:
         inc $d020
 .endif
 
+        jsr do_plotter_unroll_2
         jsr shift_sin_table
-        jsr do_plotter
 
 .if DEBUG=1
         dec $d020
@@ -103,7 +108,7 @@ main_loop:
         .endrepeat
 
         ldx #0                          ; color #3: bitmask 11
-        lda #$03
+        lda #$04
 @l2:    sta $d800, x
         sta $d900, x
         sta $da00, x
@@ -128,7 +133,44 @@ ident_array:
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
 ; do_plotter
 ;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
-.proc do_plotter
+.proc do_plotter_unroll_5
+
+        .repeat 128, YY
+                ldx sin_table + (127 - YY)
+                ldy table_x_lo, x
+                lda $2000 + (YY / 16) * 256 + (YY .MOD 8) + ((YY .MOD 16) / 8) * 128, y
+                eor table_mask, x
+                sta $2000 + (YY / 16) * 256 + (YY .MOD 8) + ((YY .MOD 16) / 8) * 128, y
+        .endrepeat
+        rts
+.endproc
+.proc do_plotter_unroll_4
+
+        .repeat 128, YY
+                ldx sin_table + 127 - ((YY + 32) .MOD 128)
+                ldy table_x_lo, x
+                lda $2000 + (YY / 16) * 256 + (YY .MOD 8) + ((YY .MOD 16) / 8) * 128, y
+                eor table_mask, x
+                sta $2000 + (YY / 16) * 256 + (YY .MOD 8) + ((YY .MOD 16) / 8) * 128, y
+        .endrepeat
+        rts
+.endproc
+.proc do_plotter_unroll_3
+
+        .repeat 128, YY
+                ldx sin_table + ((YY + 32) .MOD 128)
+                ldy table_x_lo, x
+                lda $2000 + (YY / 16) * 256 + (YY .MOD 8) + ((YY .MOD 16) / 8) * 128, y
+                eor table_mask, x
+                sta $2000 + (YY / 16) * 256 + (YY .MOD 8) + ((YY .MOD 16) / 8) * 128, y
+        .endrepeat
+        rts
+.endproc
+
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+; do_plotter
+;=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-;
+.proc do_plotter_unroll_2
 
         .repeat 128, YY
                 ldx sin_table + YY
@@ -301,6 +343,18 @@ table_x_hi:
 .align 256
 table_mask:
         .repeat 16
+                .byte %10000000
+                .byte %01000000
+                .byte %00100000
+                .byte %00010000
+                .byte %00001000
+                .byte %00000100
+                .byte %00000010
+                .byte %00000001
+        .endrepeat
+
+table_mask_mc:
+        .repeat 16
                 .byte %11000000
                 .byte %11000000
                 .byte %00110000
@@ -311,17 +365,6 @@ table_mask:
                 .byte %00000011
         .endrepeat
 
-table_mask_neg:
-        .repeat 16
-                .byte %00111111
-                .byte %00111111
-                .byte %11001111
-                .byte %11001111
-                .byte %11110011
-                .byte %11110011
-                .byte %11111100
-                .byte %11111100
-        .endrepeat
 
 .align 256
 sin_table:
