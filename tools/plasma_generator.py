@@ -386,6 +386,15 @@ class MainGui(gui.Desktop):
         tbl = gui.Table(vpadding=5, hpadding=2)
         tbl.tr()
 
+        def inc_changed_x1(slider):
+            this.engine.plasma_inc_x[0] = slider.value
+        def inc_changed_x2(slider):
+            this.engine.plasma_inc_x[1] = slider.value
+        def inc_changed_y1(slider):
+            this.engine.plasma_inc_y[0] = slider.value
+        def inc_changed_y2(slider):
+            this.engine.plasma_inc_y[1] = slider.value
+
         def offset_changed_x1(slider):
             this.engine.off_x1 = slider.value
         def offset_changed_x2(slider):
@@ -395,54 +404,56 @@ class MainGui(gui.Desktop):
         def offset_changed_y2(slider):
             this.engine.off_y2 = slider.value
 
-        def inc_changed_x1(slider):
-            this.engine.plasma_inc_x[0] = slider.value
-        def inc_changed_x2(slider):
-            this.engine.plasma_inc_x[1] = slider.value
-        def inc_changed_y1(slider):
-            this.engine.plasma_inc_y[0] = slider.value
-        def inc_changed_y2(slider):
-            this.engine.plasma_inc_y[1] = slider.value
         def dump_info():
             print('inc x = %s' % str(this.engine.plasma_inc_x))
             print('inc y = %s' % str(this.engine.plasma_inc_y))
             print('off x = (%d,%d)' % (this.engine.off_x1, this.engine.off_x2))
             print('off y = (%d,%d)' % (this.engine.off_y1, this.engine.off_y2))
 
-        slider = gui.HSlider(value=0,min=0,max=255,size=10,width=256)
-        slider.connect(gui.CHANGE, offset_changed_x1, slider)
-        tbl.td(slider)
-
-        slider = gui.HSlider(value=0,min=0,max=255,size=10,width=256)
-        slider.connect(gui.CHANGE, offset_changed_x2, slider)
-        tbl.td(slider)
-
-        tbl.tr()
-        slider = gui.HSlider(value=0,min=0,max=255,size=10,width=256)
-        slider.connect(gui.CHANGE, offset_changed_y1, slider)
-        tbl.td(slider)
-
-        slider = gui.HSlider(value=0,min=0,max=255,size=10,width=256)
-        slider.connect(gui.CHANGE, offset_changed_y2, slider)
-        tbl.td(slider)
-
-        tbl.tr()
+        # inc x0
         slider = gui.HSlider(value=0,min=0,max=255,size=10,width=256)
         slider.connect(gui.CHANGE, inc_changed_x1, slider)
         tbl.td(slider)
 
+        # inc x1
         slider = gui.HSlider(value=0,min=0,max=255,size=10,width=256)
         slider.connect(gui.CHANGE, inc_changed_x2, slider)
         tbl.td(slider)
 
+        # inc y0
         tbl.tr()
         slider = gui.HSlider(value=0,min=0,max=255,size=10,width=256)
         slider.connect(gui.CHANGE, inc_changed_y1, slider)
         tbl.td(slider)
 
+        # inc y1
         slider = gui.HSlider(value=0,min=0,max=255,size=10,width=256)
         slider.connect(gui.CHANGE, inc_changed_y2, slider)
         tbl.td(slider)
+
+
+        # off x0
+        tbl.tr()
+        slider = gui.HSlider(value=0,min=0,max=255,size=10,width=256)
+        slider.connect(gui.CHANGE, offset_changed_x1, slider)
+        tbl.td(slider)
+
+        # off x1
+        slider = gui.HSlider(value=0,min=0,max=255,size=10,width=256)
+        slider.connect(gui.CHANGE, offset_changed_x2, slider)
+        tbl.td(slider)
+
+        # off y0
+        tbl.tr()
+        slider = gui.HSlider(value=0,min=0,max=255,size=10,width=256)
+        slider.connect(gui.CHANGE, offset_changed_y1, slider)
+        tbl.td(slider)
+
+        # off y1
+        slider = gui.HSlider(value=0,min=0,max=255,size=10,width=256)
+        slider.connect(gui.CHANGE, offset_changed_y2, slider)
+        tbl.td(slider)
+
 
         tbl.tr()
         button = gui.Button('Dump info')
@@ -505,7 +516,9 @@ class GameEngine(object):
         this.clock.resume()
 
     def render(this, dest, rect):
-        render_plasma(dest, 160, 32,this.plasma_inc_x, this.plasma_inc_y, this.plasma_off_x, this.plasma_off_y)
+        PLASMA_WIDTH = 54
+        PLASMA_HEIGHT = 16
+        render_plasma(dest, PLASMA_WIDTH, PLASMA_HEIGHT,this.plasma_inc_x, this.plasma_inc_y, this.plasma_off_x, this.plasma_off_y)
         this.plasma_off_x[0] += this.off_x1
         this.plasma_off_x[1] += this.off_x2
         this.plasma_off_y[0] += this.off_y1
