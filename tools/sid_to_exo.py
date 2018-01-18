@@ -11,6 +11,9 @@ import os
 import struct
 import subprocess
 
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 
 __docformat__ = 'restructuredtext'
 
@@ -20,7 +23,7 @@ def run(sid_file):
     prg_file = basename + ".prg"
     exo_file = basename + ".exo"
     print("Converting %s to %s" % (sid_file, exo_file))
-    
+
     subprocess.call(['dd','bs=1','skip=124', 'if=%s' % sid_file, 'of=%s' %  prg_file])
     subprocess.call(['exomizer', 'mem', prg_file, '-q', '-o', exo_file])
 
