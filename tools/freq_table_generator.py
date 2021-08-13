@@ -117,7 +117,7 @@ if __name__ == "__main__":
                 phi = d[args[0]]
             else:
                 phi = int(args[0])
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         print(e)
 
     run(basefreq, octaves, steps, phi, debug)

@@ -78,7 +78,7 @@ if __name__ == "__main__":
             help()
         else:
             number_to_multiply = int(args[0])
-    except getopt.GetoptError, e:
+    except getopt.GetoptErro as e:
         print(e)
 
     run(ffrom, to, number_to_multiply, tables)

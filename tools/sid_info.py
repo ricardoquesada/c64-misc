@@ -10,8 +10,8 @@ import sys
 import os
 import struct
 
-reload(sys)
-sys.setdefaultencoding('utf8')
+#reload(sys)
+#sys.setdefaultencoding('utf8')
 
 
 __docformat__ = 'restructuredtext'

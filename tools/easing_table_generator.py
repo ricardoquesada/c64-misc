@@ -335,7 +335,7 @@ def run(formula, steps, maxvalue, reverse, absolute):
         raise Exception("Invalid formula name: %s" % formula)
     l = []
 
-    for i in xrange(steps):
+    for i in range(steps):
         # does not include time=0, but includes time=1
         time = (i+1) / steps
         ret = fn(time, *args)
@@ -415,7 +415,7 @@ if __name__ == "__main__":
             help()
         else:
             formula = args[0]
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         print(e)
 
     run(formula, steps, maxvalue, reverse, absolute)
