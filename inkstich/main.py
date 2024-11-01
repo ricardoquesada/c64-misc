@@ -20,7 +20,7 @@ def create_svg_from_png(image_path, output_path):
         with open(output_path, "w") as f:
             f.write('<?xml version="1.0" encoding="UTF-8" standalone="no"?>')
             f.write(f'<svg '
-                    f'width="{width*PIXEL_WIDTH}" height="{height*PIXEL_HEIGHT}" '
+                    f'width="4in" height="4in" version="1.1" id="{output_path}" '
                     'xmlns:svg="http://www.w3.org/2000/svg"> '
                     'xmlns:inkstitch="http://inkstitch.org/namespace"> '
                     '\n')
