@@ -1,6 +1,8 @@
 from PIL import Image
 import sys
 
+PIXEL_WIDTH = 8
+PIXEL_HEIGHT = 8
 
 def create_svg_from_png(image_path, output_path):
     """
@@ -16,18 +18,27 @@ def create_svg_from_png(image_path, output_path):
         width, height = img.size
 
         with open(output_path, "w") as f:
-            f.write(f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">\n')
-            f.write(f'<g id="layer1" inkscape:label="pixels">')
+            f.write('<?xml version="1.0" encoding="UTF-8" standalone="no"?>')
+            f.write(f'<svg '
+                    f'width="{width*PIXEL_WIDTH}" height="{height*PIXEL_HEIGHT}" '
+                    'xmlns:svg="http://www.w3.org/2000/svg"> '
+                    'xmlns:inkstitch="http://inkstitch.org/namespace"> '
+                    '\n')
+            f.write(f'<g id="layer1" inkscape:label="pixels">\n')
             for y in range(height):
                 for x in range(width):
                     r, g, b, a = img.getpixel((x, y))
-                    if a == 0:
+                    if a != 255:
                         # Skip transparent pixels
                         continue
-                    f.write(f'<rect x="{x}" y="{y}" width="1" height="1" '
+                    angle = 0 if ((x+y) % 2 == 0) else 90
+                    f.write(f'<rect x="{x*PIXEL_HEIGHT}" y="{y*PIXEL_HEIGHT}" '
+                            f'width="{PIXEL_WIDTH}" height="{PIXEL_HEIGHT}" '
                             f'fill="rgb({r},{g},{b})" '
-                            f'id="pixel{x}_{y}" '
-                            f'style="display:inline;stroke:none"/>\n')
+                            f'id="pixel_{x}_{y}" '
+                            f'style="display:inline;stroke:none" '
+                            f'inkstitch:angle="{angle}" '
+                            '/>\n')
 
             f.write(f'</g>')
             f.write('</svg>')
