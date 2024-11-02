@@ -1,8 +1,8 @@
 from PIL import Image
 import sys
 
-PIXEL_WIDTH = 8
-PIXEL_HEIGHT = 8
+PIXEL_WIDTH = 10
+PIXEL_HEIGHT = PIXEL_WIDTH
 
 # key: color
 # value: lists of neighboring pixels
@@ -36,10 +36,14 @@ def flood_fill(image, x, y, color, pixels):
 
     pixels.append((x, y))
 
-    flood_fill(image, x + 1, y, color, pixels)
-    flood_fill(image, x - 1, y, color, pixels)
-    flood_fill(image, x, y + 1, color, pixels)
-    flood_fill(image, x, y - 1, color, pixels)
+    # Parse diagonals as well. Clockwise (or counter-clockwise, but important to do it "contiguous".
+    offsets = [(1, 1), (1, 0),
+               (1, -1), (0, -1),
+               (-1, -1), (-1, 0),
+               (-1, 1), (0, 1)]
+    for offset in offsets:
+        off_x, off_y = offset
+        flood_fill(image, x + off_x, y + off_y, color, pixels)
 
 
 def group_pixels(image, width, height):
@@ -125,7 +129,6 @@ def create_svg_from_png(image_path, output_path):
     # Group the ones that are touching/same-color together
     group_pixels(image, width, height)
     write_to_svg(output_path)
-
 
 
 if __name__ == "__main__":
