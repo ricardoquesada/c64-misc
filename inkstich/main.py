@@ -14,7 +14,22 @@ image_pixels = []
 visited_pixels = set()
 
 
-def flood_fill(image, x, y, color, pixels):
+def rotate_list(lst, n):
+    """Rotates a list by n positions to the right.
+
+    Args:
+        lst: The list to rotate.
+        n: The number of positions to rotate.
+
+    Returns:
+        The rotated list.
+    """
+
+    n = n % len(lst)
+    return lst[-n:] + lst[:-n]
+
+
+def flood_fill(image, x, y, color, pixels, prev_offset):
     """
     Recursively fills a contiguous region of pixels with a new color.
 
@@ -24,6 +39,7 @@ def flood_fill(image, x, y, color, pixels):
         y: The y-coordinate of the seed pixel.
         color: The new color to fill the region with.
         pixels: The original color of the region to be filled.
+        prev_offset: The offset used by callee function
     """
 
     if x < 0 or x >= len(image) or y < 0 or y >= len(image[0]) or image[x][y] != color:
@@ -37,13 +53,23 @@ def flood_fill(image, x, y, color, pixels):
     pixels.append((x, y))
 
     # Parse diagonals as well. Clockwise (or counter-clockwise, but important to do it "contiguous".
-    offsets = [(1, 1), (1, 0),
-               (1, -1), (0, -1),
-               (-1, -1), (-1, 0),
-               (-1, 1), (0, 1)]
+    offsets = [
+        (-1, 1), (0, 1),
+        (1, 1), (1, 0),
+        (1, -1), (0, -1),
+        (-1, -1), (-1, 0)
+    ]
+
+    # The offsets are rotated to simulate a "fill from the edges" to prevent jump-stitches as much as possible.
+    # Does not yield the possible result, but good enough
+    # Prev offset should be the reverse. If it comes from the left, start with an offset pointing to the right
+    prev_offset = (-prev_offset[0],  -prev_offset[1])
+    while prev_offset != offsets[0]:
+        offsets = rotate_list(offsets, 1)
+
     for offset in offsets:
         off_x, off_y = offset
-        flood_fill(image, x + off_x, y + off_y, color, pixels)
+        flood_fill(image, x + off_x, y + off_y, color, pixels, offset)
 
 
 def group_pixels(image, width, height):
@@ -52,7 +78,7 @@ def group_pixels(image, width, height):
             if image[x][y] == -1:
                 continue
             pixels = []
-            flood_fill(image, x, y, image[x][y], pixels)
+            flood_fill(image, x, y, image[x][y], pixels, (-1, 0))
             if len(pixels) > 0:
                 color = image[x][y]
                 if color not in pixel_groups:
