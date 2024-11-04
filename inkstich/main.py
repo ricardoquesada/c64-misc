@@ -14,8 +14,8 @@ image_pixels = []
 visited_pixels = set()
 
 
-def rotate_list(lst, n):
-    """Rotates a list by n positions to the right.
+def rotate_left_list(lst, n):
+    """Rotates a list by n positions to the left.
 
     Args:
         lst: The list to rotate.
@@ -26,7 +26,27 @@ def rotate_list(lst, n):
     """
 
     n = n % len(lst)
-    return lst[-n:] + lst[:-n]
+    return lst[n:] + lst[:n]
+
+
+def is_valid_and_has_color(image, x, y, color):
+    """
+   Returns whether the pixel in x,y contains color "color"  and was not visited.
+    Args:
+        image:
+        x:
+        y:
+        color:
+
+    Returns:
+    """
+    if x < 0 or x >= len(image) or y < 0 or y >= len(image[0]) or image[x][y] != color:
+        return None
+
+    if (x, y) in visited_pixels:
+        return False
+
+    return True
 
 
 def flood_fill(image, x, y, color, pixels, prev_offset):
@@ -54,21 +74,31 @@ def flood_fill(image, x, y, color, pixels, prev_offset):
 
     # Parse diagonals as well. Clockwise (or counter-clockwise, but important to do it "contiguous".
     offsets = [
-        (-1, 1), (0, 1),
-        (1, 1), (1, 0),
-        (1, -1), (0, -1),
-        (-1, -1), (-1, 0)
+        (-1, -1), (0, -1),
+        (1, -1), (1, 0),
+        (1, 1), (0, 1),
+        (-1, 1), (-1, 0)
     ]
 
     # The offsets are rotated to simulate a "fill from the edges" to prevent jump-stitches as much as possible.
     # Does not yield the possible result, but good enough
     # Prev offset should be the reverse. If it comes from the left, start with an offset pointing to the right
-    prev_offset = (-prev_offset[0],  -prev_offset[1])
-    while prev_offset != offsets[0]:
-        offsets = rotate_list(offsets, 1)
+    inv_offset = (-prev_offset[0], -prev_offset[1])
+    while inv_offset != offsets[0]:
+        offsets = rotate_left_list(offsets, 1)
 
-    for offset in offsets:
+    for index, offset in enumerate(offsets):
         off_x, off_y = offset
+        is_diagonal = (off_x + off_y) % 2 == 0
+        # There are 8 possible offsets. The inverse of the current one is at position 4.
+        # The previous, is at 3. And we treat that diagonal as a special case. That diagonal should
+        # be skipped if there is a valid pixel in front of us. This avoid a possible jump stitch.
+        if index == 3 and is_diagonal:
+            valid_next_element = is_valid_and_has_color(image, x + prev_offset[0], y + prev_offset[1], color)
+            if valid_next_element:
+                # skip diagonal, and go straight. The diagonal will calculated in the next-next flood-fill.
+                continue
+        # print(f'index {len(visited_pixels)}, coord: {x, y}, prev: {prev_offset}, next:{offset}, offsets:{offsets}')
         flood_fill(image, x + off_x, y + off_y, color, pixels, offset)
 
 
@@ -78,7 +108,7 @@ def group_pixels(image, width, height):
             if image[x][y] == -1:
                 continue
             pixels = []
-            flood_fill(image, x, y, image[x][y], pixels, (-1, 0))
+            flood_fill(image, x, y, image[x][y], pixels, (1, 0))
             if len(pixels) > 0:
                 color = image[x][y]
                 if color not in pixel_groups:
