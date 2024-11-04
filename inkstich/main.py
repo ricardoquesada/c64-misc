@@ -1,11 +1,13 @@
+# Copyright 2024 - Ricardo Quesada
 from PIL import Image
+import argparse
 import sys
 
 # Pixels are not square in PAL:
 # https://hitmen.c02.at/temp/palstuff/
 # Aspect ratio: 0,936:1
 PIXEL_WIDTH = 10
-PIXEL_HEIGHT = 11
+PIXEL_HEIGHT = round(PIXEL_WIDTH * (1/0.936))
 
 # key: color
 # value: lists of neighboring pixels
@@ -119,11 +121,11 @@ def group_pixels(image, width, height):
                 pixel_groups[color].append(pixels)
 
 
-def write_to_svg(output_path):
+def write_to_svg(output_path, hoop_size):
     with open(output_path, "w") as f:
         f.write('<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n')
         f.write(f'<svg '
-                f'width="4in" height="4in" version="1.1" id="{output_path}" '
+                f'width="{hoop_size[0]}in" height="{hoop_size[1]}in" version="1.1" id="{output_path}" '
                 'xmlns:svg="http://www.w3.org/2000/svg" '
                 'xmlns:inkstitch="http://inkstitch.org/namespace" '
                 '>\n')
@@ -154,13 +156,14 @@ def write_to_svg(output_path):
         f.write('</svg>\n')
 
 
-def create_svg_from_png(image_path, output_path):
+def create_svg_from_png(image_path, output_path, hoop_size):
     """
     Creates an SVG file from a PNG image, representing each pixel as a rectangle.
 
     Args:
         image_path: The path to the PNG image.
         output_path: The path to save the generated SVG file.
+        hoop_size: Tuple that defines the hoop size in inches.
     """
 
     img = None
@@ -187,14 +190,26 @@ def create_svg_from_png(image_path, output_path):
             image[x][y] = color
     # Group the ones that are touching/same-color together
     group_pixels(image, width, height)
-    write_to_svg(output_path)
+    write_to_svg(output_path, hoop_size)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python script.py <input_image.png> <output.svg>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Convert a PNG image to an SVG file.")
+    parser.add_argument("input_image", help="Path to the input PNG image.")
+    parser.add_argument("output_svg", help="Path to save the output SVG file.")
+    parser.add_argument("-s", "--hoop_size", metavar="WIDTHxHEIGHT",
+                        help="Hoop size in the format WIDTHxHEIGHT in inches (e.g., 5x7)")
+    args = parser.parse_args()
 
-    image_path = sys.argv[1]
-    output_path = sys.argv[2]
-    create_svg_from_png(image_path, output_path)
+    if args.hoop_size:
+        try:
+            width, height = map(int, args.hoop_size.split('x'))
+            hoop_size = (width, height)
+        except ValueError:
+            print("Invalid hoop size format. Use WIDTHxHEIGHT (e.g., 5x7)")
+            sys.exit(1)
+    else:
+        hoop_size = (5, 7)
+
+    create_svg_from_png(args.input_image, args.output_svg, hoop_size)
