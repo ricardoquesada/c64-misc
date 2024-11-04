@@ -1,8 +1,11 @@
 from PIL import Image
 import sys
 
+# Pixels are not square in PAL:
+# https://hitmen.c02.at/temp/palstuff/
+# Aspect ratio: 0,936:1
 PIXEL_WIDTH = 10
-PIXEL_HEIGHT = PIXEL_WIDTH
+PIXEL_HEIGHT = 11
 
 # key: color
 # value: lists of neighboring pixels
@@ -137,7 +140,7 @@ def write_to_svg(output_path):
                     # pixel is (1,2)
                     x, y = pixel
                     angle = 0 if ((x + y) % 2 == 0) else 90
-                    f.write(f'<rect x="{x * PIXEL_HEIGHT}" y="{y * PIXEL_HEIGHT}" '
+                    f.write(f'<rect x="{x * PIXEL_WIDTH}" y="{y * PIXEL_HEIGHT}" '
                             f'width="{PIXEL_WIDTH}" height="{PIXEL_HEIGHT}" '
                             f'fill="#{color:06x}" '
                             f'id="pixel_{x}_{y}" '
