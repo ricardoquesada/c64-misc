@@ -3,12 +3,6 @@ from PIL import Image
 import argparse
 import sys
 
-# Pixels are not square in PAL:
-# https://hitmen.c02.at/temp/palstuff/
-# Aspect ratio: 0,936:1
-PIXEL_WIDTH = 10
-PIXEL_HEIGHT = round(PIXEL_WIDTH * (1 / 0.936))
-
 # key: color
 # value: lists of neighboring pixels
 pixel_groups = {}
@@ -121,7 +115,13 @@ def group_pixels(image, width, height):
                 pixel_groups[color].append(pixels)
 
 
-def write_to_svg(output_path, hoop_size):
+def write_to_svg(output_path, hoop_size, pixel_size):
+    # Pixels are not square in PAL:
+    # https://hitmen.c02.at/temp/palstuff/
+    # Aspect ratio: 0,936:1
+    pixel_width = pixel_size
+    pixel_height = round(pixel_width * (1 / 0.936))
+
     with open(output_path, "w") as f:
         f.write('<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n')
         f.write(f'<svg '
@@ -142,8 +142,8 @@ def write_to_svg(output_path, hoop_size):
                     # pixel is (1,2)
                     x, y = pixel
                     angle = 0 if ((x + y) % 2 == 0) else 90
-                    f.write(f'<rect x="{x * PIXEL_WIDTH}" y="{y * PIXEL_HEIGHT}" '
-                            f'width="{PIXEL_WIDTH}" height="{PIXEL_HEIGHT}" '
+                    f.write(f'<rect x="{x * pixel_width}" y="{y * pixel_height}" '
+                            f'width="{pixel_width}" height="{pixel_height}" '
                             f'fill="#{color:06x}" '
                             f'id="pixel_{x}_{y}" '
                             f'style="display:inline;stroke:none" '
@@ -156,7 +156,7 @@ def write_to_svg(output_path, hoop_size):
         f.write('</svg>\n')
 
 
-def create_svg_from_png(image_path, output_path, hoop_size):
+def create_svg_from_png(image_path, output_path, hoop_size, pixel_size):
     """
     Creates an SVG file from a PNG image, representing each pixel as a rectangle.
 
@@ -190,17 +190,26 @@ def create_svg_from_png(image_path, output_path, hoop_size):
             image[x][y] = color
     # Group the ones that are touching/same-color together
     group_pixels(image, width, height)
-    write_to_svg(output_path, hoop_size)
+    write_to_svg(output_path, hoop_size, pixel_size)
 
 
 def main():
+    sys.setrecursionlimit(5000)
+
     parser = argparse.ArgumentParser(
         description="Convert a PNG image to an SVG file.")
     parser.add_argument("input_image", help="Path to the input PNG image.")
     parser.add_argument("output_svg", help="Path to save the output SVG file.")
     parser.add_argument("-s", "--hoop_size", metavar="WIDTHxHEIGHT",
                         help="Hoop size in the format WIDTHxHEIGHT in inches (e.g., 5x7)")
+    parser.add_argument("-p", "--pixel_size", metavar="WIDTH",
+                        type=int,
+                        help="Pixel size in millimeters.")
+
     args = parser.parse_args()
+
+    hoop_size = (5, 7)
+    pixel_size = 10
 
     if args.hoop_size:
         try:
@@ -209,10 +218,11 @@ def main():
         except ValueError:
             print("Invalid hoop size format. Use WIDTHxHEIGHT (e.g., 5x7)")
             sys.exit(1)
-    else:
-        hoop_size = (5, 7)
 
-    create_svg_from_png(args.input_image, args.output_svg, hoop_size)
+    if args.pixel_size:
+        pixel_size = args.pixel_size
+
+    create_svg_from_png(args.input_image, args.output_svg, hoop_size, pixel_size)
 
 
 if __name__ == "__main__":
