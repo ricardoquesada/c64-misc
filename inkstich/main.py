@@ -7,7 +7,7 @@ import sys
 # https://hitmen.c02.at/temp/palstuff/
 # Aspect ratio: 0,936:1
 PIXEL_WIDTH = 10
-PIXEL_HEIGHT = round(PIXEL_WIDTH * (1/0.936))
+PIXEL_HEIGHT = round(PIXEL_WIDTH * (1 / 0.936))
 
 # key: color
 # value: lists of neighboring pixels
@@ -77,7 +77,7 @@ def flood_fill(image, x, y, color, pixels, prev_offset):
 
     pixels.append((x, y))
 
-    # Parse diagonals as well. Clockwise (or counter-clockwise, but important to do it "contiguous".
+    # Parse diagonals as well. Clockwise (or counter-clockwise), but important to do it "contiguous".
     offsets = [
         (-1, -1), (0, -1),
         (1, -1), (1, 0),
@@ -97,7 +97,7 @@ def flood_fill(image, x, y, color, pixels, prev_offset):
         is_diagonal = (off_x + off_y) % 2 == 0
         # There are 8 possible offsets. The inverse of the current one is at position 4.
         # The previous, is at 3. And we treat that diagonal as a special case. That diagonal should
-        # be skipped if there is a valid pixel in front of us. This avoid a possible jump stitch.
+        # be skipped if there is a valid pixel in front of us. This avoids a possible jump stitch.
         if index == 3 and is_diagonal:
             valid_next_element = is_valid_and_has_color(image, x + prev_offset[0], y + prev_offset[1], color)
             if valid_next_element:
@@ -193,7 +193,7 @@ def create_svg_from_png(image_path, output_path, hoop_size):
     write_to_svg(output_path, hoop_size)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Convert a PNG image to an SVG file.")
     parser.add_argument("input_image", help="Path to the input PNG image.")
@@ -213,3 +213,7 @@ if __name__ == "__main__":
         hoop_size = (5, 7)
 
     create_svg_from_png(args.input_image, args.output_svg, hoop_size)
+
+
+if __name__ == "__main__":
+    main()
